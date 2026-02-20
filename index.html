@@ -29,6 +29,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
   <link rel="stylesheet" href="nearmissmap.css">
 </head>
 <body class="font-['Inter',sans-serif]">
@@ -45,9 +46,20 @@
             <span class="block text-[10px] text-slate-400 -mt-0.5">Report cycling incidents & annoyances</span>
           </div>
         </div>
-        <a href="https://vicbug.app" target="_blank" class="text-[11px] text-slate-500 hover:text-slate-300 transition-colors">
-          Powered by VicBUG
-        </a>
+        <div class="flex items-center gap-3">
+          <a href="https://vicbug.app" target="_blank" class="text-[11px] text-slate-500 hover:text-slate-300 transition-colors">
+            Powered by VicBUG
+          </a>
+          <button id="nav-login-btn" onclick="showLoginModal()" class="size-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all" title="Sign in">
+            <i class="fa-solid fa-user text-sm"></i>
+          </button>
+          <div id="nav-user-info" class="hidden flex items-center gap-2">
+            <span id="nav-user-name" class="text-[11px] text-slate-300 max-w-[100px] truncate"></span>
+            <button onclick="signOut()" class="size-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all" title="Sign out">
+              <i class="fa-solid fa-right-from-bracket text-sm"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </nav>
   </header>
@@ -373,6 +385,26 @@
 
       <hr class="border-gray-100">
 
+      <!-- Photo -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Photo (Optional)</label>
+        <label class="flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-colors">
+          <i class="fa-solid fa-camera text-gray-400"></i>
+          <span class="text-[13px] text-gray-500">Add a photo</span>
+          <input type="file" id="incident-photo" accept="image/*" class="hidden" onchange="previewPhoto(this, 'incident-photo-preview')">
+        </label>
+        <div id="incident-photo-preview" class="mt-2 hidden">
+          <div class="relative inline-block">
+            <img id="incident-photo-img" class="max-h-32 rounded-lg border border-gray-200" />
+            <button type="button" onclick="removePhoto('incident')" class="absolute -top-2 -right-2 size-6 inline-flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-gray-100">
+
       <!-- Contact (Optional) -->
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contact (Optional)</label>
@@ -551,6 +583,26 @@
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description <span class="text-red-500">*</span></label>
         <textarea id="annoyance-description" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-y" placeholder="Describe what's annoying and how it affects your ride..." maxlength="1000"></textarea>
         <p id="annoyance-char-count" class="text-[11px] text-gray-400 text-right mt-1">0 / 1000</p>
+      </div>
+
+      <hr class="border-gray-100">
+
+      <!-- Photo -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Photo (Optional)</label>
+        <label class="flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-colors">
+          <i class="fa-solid fa-camera text-gray-400"></i>
+          <span class="text-[13px] text-gray-500">Add a photo</span>
+          <input type="file" id="annoyance-photo" accept="image/*" class="hidden" onchange="previewPhoto(this, 'annoyance-photo-preview')">
+        </label>
+        <div id="annoyance-photo-preview" class="mt-2 hidden">
+          <div class="relative inline-block">
+            <img id="annoyance-photo-img" class="max-h-32 rounded-lg border border-gray-200" />
+            <button type="button" onclick="removePhoto('annoyance')" class="absolute -top-2 -right-2 size-6 inline-flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <hr class="border-gray-100">

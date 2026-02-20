@@ -12,10 +12,12 @@ mapboxgl.accessToken = config.MAPBOX_TOKEN || '';
 const firebaseConfig = config.FIREBASE_CONFIG || {};
 let db = null;
 let auth = null;
+let storage = null;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
   auth = firebase.auth();
+  storage = firebase.storage();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 } catch (e) {
   console.warn('Firebase initialization failed:', e.message);
@@ -785,9 +787,10 @@ function addMapLayers() {
           ${injuryLabel ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-red-100 text-red-700">${injuryLabel}</span>` : ''}
           ${p.otherParty && p.otherParty !== 'none' ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${formatParty(p.otherParty)}</span>` : ''}
         </div>
+        ${p.photoURL ? `<div class="mt-2"><img src="${p.photoURL}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onclick="window.open('${p.photoURL}','_blank')" /></div>` : ''}
         ${infraHtml}
         <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
-          ${currentUser ? `<button onclick="flagIncident('${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>` : ''}
+          <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
           ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50">&#x1F5D1; Delete</button>` : ''}
         </div>
       </div>
@@ -843,8 +846,10 @@ function addMapLayers() {
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">Annoyance</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${ongoingLabel}</span>
         </div>
+        ${p.photoURL ? `<div class="mt-2"><img src="${p.photoURL}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onclick="window.open('${p.photoURL}','_blank')" /></div>` : ''}
         ${infraHtml}
         <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
+          <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
           ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50">&#x1F5D1; Delete</button>` : ''}
         </div>
       </div>
@@ -913,6 +918,8 @@ function loadIncidents() {
           dateTime: d.dateTime ? d.dateTime.toDate().toISOString() : null,
           roadName: d.roadName || '',
           reportCount: d.reportCount || 0,
+          flagged: d.flagged || false,
+          photoURL: d.photoURL || '',
           infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
         }
       });
@@ -956,6 +963,8 @@ function loadAnnoyances() {
           isOngoing: d.isOngoing || false,
           description: d.description,
           roadName: d.roadName || '',
+          flagged: d.flagged || false,
+          photoURL: d.photoURL || '',
           infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
         }
       });
@@ -1402,6 +1411,11 @@ function resetForm() {
   if (cName) cName.value = '';
   if (cEmail) cEmail.value = '';
   if (cConsent) cConsent.checked = false;
+  // Reset photo
+  removePhoto('incident');
+  // Reset anon toggle
+  const contactFields = document.getElementById('contact-fields');
+  if (contactFields) contactFields.classList.add('hidden');
   document.getElementById('incident-submit').disabled = true;
 }
 
@@ -1503,6 +1517,11 @@ function resetAnnoyanceForm() {
   if (aCName) aCName.value = '';
   if (aCEmail) aCEmail.value = '';
   if (aCConsent) aCConsent.checked = false;
+  // Reset photo
+  removePhoto('annoyance');
+  // Reset anon toggle
+  const annContactFields = document.getElementById('annoyance-contact-fields');
+  if (annContactFields) annContactFields.classList.add('hidden');
   document.getElementById('annoyance-submit').disabled = true;
 }
 
@@ -1563,7 +1582,16 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     if (annContactConsent) annoyanceData.contactConsent = true;
     if (currentInfrastructure) annoyanceData.infrastructure = currentInfrastructure;
 
-    await db.collection('annoyances').add(annoyanceData);
+    const annDocRef = await db.collection('annoyances').add(annoyanceData);
+
+    // Upload photo if provided
+    const annPhotoInput = document.getElementById('annoyance-photo');
+    if (annPhotoInput.files && annPhotoInput.files[0]) {
+      try {
+        const photoURL = await uploadPhoto(annPhotoInput.files[0], 'annoyances', annDocRef.id);
+        if (photoURL) await annDocRef.update({ photoURL });
+      } catch (e) { console.warn('Photo upload failed:', e); }
+    }
 
     annoyancePanel.classList.remove('visible');
     if (placeholderMarker) {
@@ -1663,7 +1691,16 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
     // Add auto-detected infrastructure
     if (currentInfrastructure) incidentData.infrastructure = currentInfrastructure;
 
-    await db.collection('incidents').add(incidentData);
+    const docRef = await db.collection('incidents').add(incidentData);
+
+    // Upload photo if provided
+    const photoInput = document.getElementById('incident-photo');
+    if (photoInput.files && photoInput.files[0]) {
+      try {
+        const photoURL = await uploadPhoto(photoInput.files[0], 'incidents', docRef.id);
+        if (photoURL) await docRef.update({ photoURL });
+      } catch (e) { console.warn('Photo upload failed:', e); }
+    }
 
     // Success
     incidentPanel.classList.remove('visible');
@@ -1711,21 +1748,17 @@ window.deleteAnnoyance = async function(annoyanceId) {
   }
 };
 
-window.flagIncident = async function(incidentId) {
-  if (!currentUser) {
-    showLoginModal();
-    return;
-  }
-
+window.flagReport = async function(collection, docId) {
   try {
-    const ref = db.collection('incidents').doc(incidentId);
+    const ref = db.collection(collection).doc(docId);
     await ref.update({
+      flagged: true,
       reportCount: firebase.firestore.FieldValue.increment(1)
     });
-    showToast('Incident flagged for review');
+    showToast('Flagged for review. Thank you!');
   } catch (err) {
     console.error('Flag error:', err);
-    showToast('Could not flag incident');
+    showToast('Could not flag report');
   }
 };
 
@@ -1738,6 +1771,10 @@ if (auth) {
     currentUser = user;
     isAdmin = false;
 
+    const loginBtn = document.getElementById('nav-login-btn');
+    const userInfo = document.getElementById('nav-user-info');
+    const userName = document.getElementById('nav-user-name');
+
     if (user) {
       try {
         const userDoc = await db.collection('users').doc(user.uid).get();
@@ -1748,6 +1785,14 @@ if (auth) {
       } catch (e) {
         console.error('Error fetching user role:', e);
       }
+      // Show user info in navbar
+      if (loginBtn) loginBtn.classList.add('hidden');
+      if (userInfo) userInfo.classList.remove('hidden');
+      if (userName) userName.textContent = user.displayName || user.email || 'User';
+    } else {
+      // Show login button
+      if (loginBtn) loginBtn.classList.remove('hidden');
+      if (userInfo) userInfo.classList.add('hidden');
     }
   });
 }
@@ -1834,6 +1879,50 @@ async function signInWithEmail() {
     }
   }
 }
+
+// ============================================
+// PHOTO UPLOAD
+// ============================================
+
+window.previewPhoto = function(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const img = preview.querySelector('img');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target.result;
+      preview.classList.remove('hidden');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+window.removePhoto = function(panel) {
+  const inputId = panel === 'incident' ? 'incident-photo' : 'annoyance-photo';
+  const previewId = panel === 'incident' ? 'incident-photo-preview' : 'annoyance-photo-preview';
+  document.getElementById(inputId).value = '';
+  document.getElementById(previewId).classList.add('hidden');
+};
+
+async function uploadPhoto(file, collection, docId) {
+  if (!storage || !file) return null;
+  const ext = file.name.split('.').pop();
+  const path = `${collection}/${docId}.${ext}`;
+  const ref = storage.ref(path);
+  await ref.put(file);
+  return await ref.getDownloadURL();
+}
+
+// ============================================
+// SIGN OUT
+// ============================================
+
+window.signOut = async function() {
+  if (auth) {
+    await auth.signOut();
+    showToast('Signed out');
+  }
+};
 
 // ============================================
 // ANONYMOUS TOGGLE
