@@ -737,6 +737,31 @@ function addMapLayers() {
     });
   });
 
+  // Helper: build photo HTML for popups (handles single photoURL + multi photoURLs)
+  function buildPhotoHtml(p) {
+    let urls = [];
+    // Try photoURLs array first (may be JSON string from Firestore GeoJSON properties)
+    if (p.photoURLs) {
+      try {
+        const parsed = typeof p.photoURLs === 'string' ? JSON.parse(p.photoURLs) : p.photoURLs;
+        if (Array.isArray(parsed)) urls = parsed;
+      } catch (e) {}
+    }
+    // Fallback to single photoURL
+    if (urls.length === 0 && p.photoURL && p.photoURL !== '') {
+      urls = [p.photoURL];
+    }
+    if (urls.length === 0) return '';
+    const escaped = urls.map(u => escapeHtml(u));
+    const jsonUrls = JSON.stringify(escaped).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    if (urls.length === 1) {
+      return `<div class="mb-2"><img src="${escaped[0]}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="openLightbox([&quot;${escaped[0]}&quot;],0)" /></div>`;
+    }
+    return `<div class="mb-2 flex gap-1.5 overflow-x-auto">${escaped.map((u, i) =>
+      `<img src="${u}" class="h-20 w-20 object-cover rounded-lg border border-gray-200 cursor-pointer shrink-0" onerror="this.style.display='none'" onclick="openLightbox(${jsonUrls},${i})" />`
+    ).join('')}</div>`;
+  }
+
   // Click incident point to show popup
   map.on('click', 'incident-points', (e) => {
     if (isPlacingMarker) return; // Don't popup while placing marker
@@ -791,7 +816,7 @@ function addMapLayers() {
     const reporterName = p.reporterName || 'Anonymous';
 
     const html = `
-      <div class="max-w-[300px] font-['Inter',sans-serif]">
+      <div class="max-w-[320px] font-['Inter',sans-serif]">
         <div class="flex items-start gap-2 mb-2">
           <div class="shrink-0 size-8 inline-flex items-center justify-center rounded-full bg-red-100 text-red-600 text-sm">${TYPE_ICONS[p.incidentType] || '<i class="fa-solid fa-triangle-exclamation"></i>'}</div>
           <div class="grow">
@@ -806,7 +831,7 @@ function addMapLayers() {
           ${injuryLabel ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-red-100 text-red-700">${injuryLabel}</span>` : ''}
           ${p.otherParty && p.otherParty !== 'none' ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${formatParty(p.otherParty)}</span>` : ''}
         </div>
-        ${p.photoURL && p.photoURL !== '' ? `<div class="mb-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
+        ${buildPhotoHtml(p)}
         ${infraHtml}
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
@@ -818,7 +843,7 @@ function addMapLayers() {
       </div>
     `;
 
-    new mapboxgl.Popup({ maxWidth: '300px' })
+    new mapboxgl.Popup({ maxWidth: '320px' })
       .setLngLat(coords)
       .setHTML(html)
       .addTo(map);
@@ -862,7 +887,7 @@ function addMapLayers() {
     const reporterName = p.reporterName || 'Anonymous';
 
     const html = `
-      <div class="max-w-[300px] font-['Inter',sans-serif]">
+      <div class="max-w-[320px] font-['Inter',sans-serif]">
         <div class="flex items-start gap-2 mb-2">
           <div class="shrink-0 size-8 inline-flex items-center justify-center rounded-full bg-amber-100 text-amber-600 text-sm">${ANNOYANCE_TYPE_ICONS[p.annoyanceType] || '<i class="fa-solid fa-circle-exclamation"></i>'}</div>
           <div class="grow">
@@ -875,7 +900,7 @@ function addMapLayers() {
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">Annoyance</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${ongoingLabel}</span>
         </div>
-        ${p.photoURL && p.photoURL !== '' ? `<div class="mb-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
+        ${buildPhotoHtml(p)}
         ${infraHtml}
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
@@ -886,7 +911,7 @@ function addMapLayers() {
         </div>
       </div>
     `;
-    new mapboxgl.Popup({ maxWidth: '300px' }).setLngLat(coords).setHTML(html).addTo(map);
+    new mapboxgl.Popup({ maxWidth: '320px' }).setLngLat(coords).setHTML(html).addTo(map);
   });
 
   // Cursor styles
@@ -1549,17 +1574,15 @@ function resetAnnoyanceForm() {
   annoyanceDescEl.value = '';
   annoyanceCharCountEl.textContent = '0 / 1000';
   annoyanceCharCountEl.classList.remove('error');
-  // Reset about you / contact fields
-  const aGender = document.getElementById('annoyance-gender');
-  const aAge = document.getElementById('annoyance-age');
+  // Reset contact fields
   const aCName = document.getElementById('annoyance-contact-name');
   const aCEmail = document.getElementById('annoyance-contact-email');
   const aCConsent = document.getElementById('annoyance-contact-consent');
-  if (aGender) aGender.value = '';
-  if (aAge) aAge.value = '';
   if (aCName) aCName.value = '';
   if (aCEmail) aCEmail.value = '';
   if (aCConsent) aCConsent.checked = false;
+  const aCFields = document.getElementById('annoyance-contact-fields');
+  if (aCFields) aCFields.classList.add('hidden');
   // Reset photo
   removePhoto('annoyance');
   // Reset anon toggle — fields visible by default, button unselected
@@ -1632,12 +1655,11 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
 
     const annDocRef = await db.collection('annoyances').add(annoyanceData);
 
-    // Upload photo if provided
-    const annPhotoInput = document.getElementById('annoyance-photo');
-    if (annPhotoInput.files && annPhotoInput.files[0]) {
+    // Upload photos if provided
+    if (selectedPhotos.annoyance.length > 0) {
       try {
-        const photoURL = await uploadPhoto(annPhotoInput.files[0], 'annoyances', annDocRef.id);
-        if (photoURL) await annDocRef.update({ photoURL });
+        const photoURLs = await uploadPhotos(selectedPhotos.annoyance, 'annoyances', annDocRef.id);
+        if (photoURLs.length > 0) await annDocRef.update({ photoURLs, photoURL: photoURLs[0] });
       } catch (e) { console.warn('Photo upload failed:', e); }
     }
 
@@ -1741,12 +1763,11 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     const docRef = await db.collection('incidents').add(incidentData);
 
-    // Upload photo if provided
-    const photoInput = document.getElementById('incident-photo');
-    if (photoInput.files && photoInput.files[0]) {
+    // Upload photos if provided
+    if (selectedPhotos.incident.length > 0) {
       try {
-        const photoURL = await uploadPhoto(photoInput.files[0], 'incidents', docRef.id);
-        if (photoURL) await docRef.update({ photoURL });
+        const photoURLs = await uploadPhotos(selectedPhotos.incident, 'incidents', docRef.id);
+        if (photoURLs.length > 0) await docRef.update({ photoURLs, photoURL: photoURLs[0] });
       } catch (e) { console.warn('Photo upload failed:', e); }
     }
 
@@ -1929,36 +1950,109 @@ window.signInWithEmail = async function() {
 };
 
 // ============================================
-// PHOTO UPLOAD
+// IMAGE LIGHTBOX
 // ============================================
 
-window.previewPhoto = function(input, previewId) {
-  const preview = document.getElementById(previewId);
-  const img = preview.querySelector('img');
-  if (input.files && input.files[0]) {
+let lightboxUrls = [];
+let lightboxIndex = 0;
+
+window.openLightbox = function(urls, index) {
+  lightboxUrls = Array.isArray(urls) ? urls : [urls];
+  lightboxIndex = index || 0;
+  const overlay = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = lightboxUrls[lightboxIndex];
+  document.getElementById('lightbox-prev').style.display = lightboxUrls.length > 1 ? 'flex' : 'none';
+  document.getElementById('lightbox-next').style.display = lightboxUrls.length > 1 ? 'flex' : 'none';
+  const counter = document.getElementById('lightbox-counter');
+  counter.textContent = lightboxUrls.length > 1 ? `${lightboxIndex + 1} / ${lightboxUrls.length}` : '';
+  overlay.classList.add('active');
+};
+
+window.closeLightbox = function(e) {
+  if (e && e.target !== e.currentTarget && !e.target.closest('.lightbox-close')) return;
+  document.getElementById('lightbox').classList.remove('active');
+};
+
+window.lightboxNav = function(e, dir) {
+  e.stopPropagation();
+  lightboxIndex = (lightboxIndex + dir + lightboxUrls.length) % lightboxUrls.length;
+  document.getElementById('lightbox-img').src = lightboxUrls[lightboxIndex];
+  const counter = document.getElementById('lightbox-counter');
+  counter.textContent = lightboxUrls.length > 1 ? `${lightboxIndex + 1} / ${lightboxUrls.length}` : '';
+};
+
+// Keyboard nav
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('lightbox').classList.contains('active')) return;
+  if (e.key === 'Escape') closeLightbox({ target: document.getElementById('lightbox'), currentTarget: document.getElementById('lightbox') });
+  if (e.key === 'ArrowLeft') lightboxNav(e, -1);
+  if (e.key === 'ArrowRight') lightboxNav(e, 1);
+});
+
+// ============================================
+// PHOTO UPLOAD (multi-photo)
+// ============================================
+
+// Store selected files per panel (since input.files resets)
+const selectedPhotos = { incident: [], annoyance: [] };
+
+window.previewPhotos = function(input, panel) {
+  const preview = document.getElementById(panel + '-photo-preview');
+  const newFiles = Array.from(input.files);
+  selectedPhotos[panel] = selectedPhotos[panel].concat(newFiles);
+  renderPhotoPreviews(panel);
+};
+
+function renderPhotoPreviews(panel) {
+  const preview = document.getElementById(panel + '-photo-preview');
+  preview.innerHTML = '';
+  if (selectedPhotos[panel].length === 0) {
+    preview.classList.add('hidden');
+    return;
+  }
+  preview.classList.remove('hidden');
+  selectedPhotos[panel].forEach((file, i) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      img.src = e.target.result;
-      preview.classList.remove('hidden');
+      const wrap = document.createElement('div');
+      wrap.className = 'relative inline-block';
+      wrap.innerHTML = `
+        <img src="${e.target.result}" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />
+        <button type="button" onclick="removeOnePhoto('${panel}',${i})" class="absolute -top-1.5 -right-1.5 size-5 inline-flex items-center justify-center bg-red-500 text-white rounded-full text-[10px] hover:bg-red-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+      preview.appendChild(wrap);
     };
-    reader.readAsDataURL(input.files[0]);
-  }
+    reader.readAsDataURL(file);
+  });
+}
+
+window.removeOnePhoto = function(panel, index) {
+  selectedPhotos[panel].splice(index, 1);
+  renderPhotoPreviews(panel);
 };
 
 window.removePhoto = function(panel) {
+  selectedPhotos[panel] = [];
   const inputId = panel === 'incident' ? 'incident-photo' : 'annoyance-photo';
-  const previewId = panel === 'incident' ? 'incident-photo-preview' : 'annoyance-photo-preview';
   document.getElementById(inputId).value = '';
-  document.getElementById(previewId).classList.add('hidden');
+  renderPhotoPreviews(panel);
 };
 
-async function uploadPhoto(file, collection, docId) {
-  if (!storage || !file) return null;
-  const ext = file.name.split('.').pop();
-  const path = `${collection}/${docId}.${ext}`;
-  const ref = storage.ref(path);
-  await ref.put(file);
-  return await ref.getDownloadURL();
+async function uploadPhotos(files, collection, docId) {
+  if (!storage || !files || files.length === 0) return [];
+  const urls = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const ext = file.name.split('.').pop();
+    const path = `${collection}/${docId}_${i}.${ext}`;
+    const ref = storage.ref(path);
+    await ref.put(file);
+    urls.push(await ref.getDownloadURL());
+  }
+  return urls;
 }
 
 // ============================================
