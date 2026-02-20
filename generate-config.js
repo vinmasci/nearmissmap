@@ -1,10 +1,14 @@
 const fs = require('fs');
 
+const mapboxToken = (process.env.MAPBOX_TOKEN || '').trim();
+const placesKey = (process.env.GOOGLE_PLACES_KEY || '').trim();
+const firebaseKey = (process.env.FIREBASE_API_KEY || '').trim();
+
 const config = `window.APP_CONFIG = {
-  MAPBOX_TOKEN: '${process.env.MAPBOX_TOKEN || ''}',
-  GOOGLE_PLACES_KEY: '${process.env.GOOGLE_PLACES_KEY || ''}',
+  MAPBOX_TOKEN: '${mapboxToken}',
+  GOOGLE_PLACES_KEY: '${placesKey}',
   FIREBASE_CONFIG: {
-    apiKey: '${process.env.FIREBASE_API_KEY || ''}',
+    apiKey: '${firebaseKey}',
     authDomain: 'cyaroutes.firebaseapp.com',
     projectId: 'cyaroutes',
     storageBucket: 'cyaroutes.firebasestorage.app',
