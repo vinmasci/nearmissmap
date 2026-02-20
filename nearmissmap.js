@@ -1836,8 +1836,28 @@ async function signInWithEmail() {
 }
 
 // ============================================
-// NAVBAR (no toggle needed — simple branding bar)
+// ANONYMOUS TOGGLE
 // ============================================
+
+window.toggleAnon = function(btn, panel) {
+  const isAnon = btn.dataset.anon === 'yes';
+  const fieldsId = panel === 'incident' ? 'contact-fields' : 'annoyance-contact-fields';
+  const fields = document.getElementById(fieldsId);
+
+  // Update button states
+  btn.closest('.flex').querySelectorAll('.anon-btn').forEach(b => {
+    b.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+    b.classList.add('text-gray-700', 'border-gray-200');
+  });
+  btn.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+  btn.classList.remove('text-gray-700', 'border-gray-200');
+
+  if (isAnon) {
+    fields.classList.add('hidden');
+  } else {
+    fields.classList.remove('hidden');
+  }
+};
 
 // ============================================
 // HELPERS
