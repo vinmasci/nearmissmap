@@ -601,6 +601,45 @@ function addMapLayers() {
   // Load cycling routes from Firestore
   loadCyclingRoutes();
 
+  // --- Cycling Infrastructure (OSM bike lanes & paths) ---
+  fetch('cycling-infra.geojson')
+    .then(r => r.json())
+    .then(data => {
+      map.addSource('cycling-infra', { type: 'geojson', data });
+
+      // Shared paths / bike paths — solid line
+      map.addLayer({
+        id: 'infra-paths',
+        type: 'line',
+        source: 'cycling-infra',
+        filter: ['==', ['get', 't'], 'path'],
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2.5, 18, 4],
+          'line-opacity': 0.3
+        },
+        layout: { 'line-cap': 'round', 'line-join': 'round' }
+      }, 'incident-clusters');
+
+      // Bike lanes — dashed line
+      map.addLayer({
+        id: 'infra-lanes',
+        type: 'line',
+        source: 'cycling-infra',
+        filter: ['==', ['get', 't'], 'lane'],
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 14, 2, 18, 3],
+          'line-opacity': 0.25,
+          'line-dasharray': [2, 3]
+        },
+        layout: { 'line-cap': 'round', 'line-join': 'round' }
+      }, 'incident-clusters');
+
+      console.log(`Loaded ${data.features.length} cycling infrastructure segments`);
+    })
+    .catch(e => console.warn('Cycling infrastructure not loaded:', e));
+
   // --- 3. Incident Markers (GeoJSON source, filled later) ---
   map.addSource('incidents', {
     type: 'geojson',
@@ -688,7 +727,12 @@ function addMapLayers() {
       source: 'annoyances',
       filter: ['has', 'point_count'],
       paint: {
-        'circle-color': '#f59e0b',
+        'circle-color': [
+          'step', ['get', 'point_count'],
+          '#8b5cf6', 10,
+          '#7c3aed', 25,
+          '#6d28d9'
+        ],
         'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 25, 22],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#fff'
