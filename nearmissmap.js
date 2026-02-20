@@ -787,7 +787,7 @@ function addMapLayers() {
           ${injuryLabel ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-red-100 text-red-700">${injuryLabel}</span>` : ''}
           ${p.otherParty && p.otherParty !== 'none' ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${formatParty(p.otherParty)}</span>` : ''}
         </div>
-        ${p.photoURL ? `<div class="mt-2"><img src="${p.photoURL}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onclick="window.open('${p.photoURL}','_blank')" /></div>` : ''}
+        ${p.photoURL && p.photoURL !== '' ? `<div class="mt-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
         ${infraHtml}
         <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
           <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
@@ -846,7 +846,7 @@ function addMapLayers() {
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">Annoyance</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${ongoingLabel}</span>
         </div>
-        ${p.photoURL ? `<div class="mt-2"><img src="${p.photoURL}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onclick="window.open('${p.photoURL}','_blank')" /></div>` : ''}
+        ${p.photoURL && p.photoURL !== '' ? `<div class="mt-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
         ${infraHtml}
         <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
           <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
@@ -1413,9 +1413,14 @@ function resetForm() {
   if (cConsent) cConsent.checked = false;
   // Reset photo
   removePhoto('incident');
-  // Reset anon toggle
+  // Reset anon toggle — fields visible by default, button unselected
   const contactFields = document.getElementById('contact-fields');
-  if (contactFields) contactFields.classList.add('hidden');
+  if (contactFields) contactFields.classList.remove('hidden');
+  const incidentAnonBtn = document.getElementById('incident-anon-btn');
+  if (incidentAnonBtn) {
+    incidentAnonBtn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+    incidentAnonBtn.classList.add('text-gray-500', 'border-gray-200');
+  }
   document.getElementById('incident-submit').disabled = true;
 }
 
@@ -1519,9 +1524,14 @@ function resetAnnoyanceForm() {
   if (aCConsent) aCConsent.checked = false;
   // Reset photo
   removePhoto('annoyance');
-  // Reset anon toggle
+  // Reset anon toggle — fields visible by default, button unselected
   const annContactFields = document.getElementById('annoyance-contact-fields');
-  if (annContactFields) annContactFields.classList.add('hidden');
+  if (annContactFields) annContactFields.classList.remove('hidden');
+  const annAnonBtn = document.getElementById('annoyance-anon-btn');
+  if (annAnonBtn) {
+    annAnonBtn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+    annAnonBtn.classList.add('text-gray-500', 'border-gray-200');
+  }
   document.getElementById('annoyance-submit').disabled = true;
 }
 
@@ -1797,40 +1807,44 @@ if (auth) {
   });
 }
 
-function showLoginModal() {
+window.showLoginModal = function() {
   document.getElementById('login-options').classList.remove('hidden');
   document.getElementById('email-form').classList.add('hidden');
   document.getElementById('login-error').textContent = '';
   const el = document.getElementById('login-modal');
-  if (typeof HSOverlay !== 'undefined') {
-    HSOverlay.open(el);
-  } else {
-    el.classList.add('open');
-    el.classList.remove('hidden');
+  el.classList.remove('hidden');
+  el.classList.add('open');
+  // Add backdrop
+  let backdrop = document.getElementById('login-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'login-backdrop';
+    backdrop.className = 'hs-overlay-backdrop fixed inset-0 z-[1999]';
+    backdrop.addEventListener('click', hideLoginModal);
+    document.body.appendChild(backdrop);
   }
-}
+  backdrop.classList.remove('hidden');
+};
 
-function hideLoginModal() {
+window.hideLoginModal = function() {
   const el = document.getElementById('login-modal');
-  if (typeof HSOverlay !== 'undefined') {
-    HSOverlay.close(el);
-  } else {
-    el.classList.remove('open');
-    el.classList.add('hidden');
-  }
-}
+  el.classList.add('hidden');
+  el.classList.remove('open');
+  const backdrop = document.getElementById('login-backdrop');
+  if (backdrop) backdrop.classList.add('hidden');
+};
 
-function showEmailForm() {
+window.showEmailForm = function() {
   document.getElementById('login-options').classList.add('hidden');
   document.getElementById('email-form').classList.remove('hidden');
-}
+};
 
-function showLoginOptions() {
+window.showLoginOptions = function() {
   document.getElementById('login-options').classList.remove('hidden');
   document.getElementById('email-form').classList.add('hidden');
-}
+};
 
-async function signInWithApple() {
+window.signInWithApple = async function() {
   try {
     const provider = new firebase.auth.OAuthProvider('apple.com');
     provider.addScope('email');
@@ -1841,9 +1855,9 @@ async function signInWithApple() {
     console.error('Apple sign-in error:', error);
     document.getElementById('login-error').textContent = error.message;
   }
-}
+};
 
-async function signInWithGoogle() {
+window.signInWithGoogle = async function() {
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
@@ -1852,9 +1866,9 @@ async function signInWithGoogle() {
     console.error('Google sign-in error:', error);
     document.getElementById('login-error').textContent = error.message;
   }
-}
+};
 
-async function signInWithEmail() {
+window.signInWithEmail = async function() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
 
@@ -1878,7 +1892,7 @@ async function signInWithEmail() {
       document.getElementById('login-error').textContent = error.message;
     }
   }
-}
+};
 
 // ============================================
 // PHOTO UPLOAD
@@ -1929,22 +1943,27 @@ window.signOut = async function() {
 // ============================================
 
 window.toggleAnon = function(btn, panel) {
-  const isAnon = btn.dataset.anon === 'yes';
   const fieldsId = panel === 'incident' ? 'contact-fields' : 'annoyance-contact-fields';
   const fields = document.getElementById(fieldsId);
+  const isCurrentlySelected = btn.classList.contains('selected');
 
-  // Update button states
-  btn.closest('.flex').querySelectorAll('.anon-btn').forEach(b => {
-    b.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
-    b.classList.add('text-gray-700', 'border-gray-200');
-  });
-  btn.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
-  btn.classList.remove('text-gray-700', 'border-gray-200');
-
-  if (isAnon) {
-    fields.classList.add('hidden');
-  } else {
+  if (isCurrentlySelected) {
+    // Deselect — show fields again
+    btn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+    btn.classList.add('text-gray-500', 'border-gray-200');
     fields.classList.remove('hidden');
+  } else {
+    // Select — hide fields (post anonymously)
+    btn.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
+    btn.classList.remove('text-gray-500', 'border-gray-200');
+    fields.classList.add('hidden');
+    // Clear contact fields
+    const nameId = panel === 'incident' ? 'contact-name' : 'annoyance-contact-name';
+    const emailId = panel === 'incident' ? 'contact-email' : 'annoyance-contact-email';
+    const consentId = panel === 'incident' ? 'contact-consent' : 'annoyance-contact-consent';
+    document.getElementById(nameId).value = '';
+    document.getElementById(emailId).value = '';
+    document.getElementById(consentId).checked = false;
   }
 };
 
