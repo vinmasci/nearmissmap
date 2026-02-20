@@ -315,50 +315,52 @@ function displayInfrastructure(infra, cardEl, spinnerEl) {
   const pills = [];
 
   // Road type
-  pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">${infra.roadTypeLabel}</span>`);
+  pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700"><i class="fa-solid fa-road text-[9px]"></i> ${infra.roadTypeLabel}</span>`);
 
   // Speed limit
   if (infra.speedLimit) {
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${infra.speedLimit} km/h</span>`);
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700"><i class="fa-solid fa-gauge text-[9px]"></i> ${infra.speedLimit} km/h</span>`);
   }
 
   // Bike infrastructure
   if (infra.bikeInfrastructure) {
     const good = ['Dedicated Bike Path', 'Protected Bike Lane', 'Shared Use Path'].includes(infra.bikeInfrastructure);
     const cls = good ? 'bg-green-50 text-green-700' : infra.bikeInfrastructure === 'No Bike Lane' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700';
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium ${cls}">${infra.bikeInfrastructure}</span>`);
+    const icon = good ? 'fa-bicycle' : infra.bikeInfrastructure === 'No Bike Lane' ? 'fa-ban' : 'fa-bicycle';
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium ${cls}"><i class="fa-solid ${icon} text-[9px]"></i> ${infra.bikeInfrastructure}</span>`);
   }
 
   // Lanes
   if (infra.lanes) {
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${infra.lanes} lane${infra.lanes > 1 ? 's' : ''}</span>`);
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700"><i class="fa-solid fa-arrows-left-right text-[9px]"></i> ${infra.lanes} lane${infra.lanes > 1 ? 's' : ''}</span>`);
   }
 
   // Lighting
   if (infra.lit) {
     const litLabel = infra.lit === 'yes' ? 'Street Lit' : infra.lit === 'no' ? 'Unlit' : infra.lit;
     const litCls = infra.lit === 'yes' ? 'bg-yellow-50 text-yellow-700' : 'bg-gray-100 text-gray-600';
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium ${litCls}">${litLabel}</span>`);
+    const litIcon = infra.lit === 'yes' ? 'fa-lightbulb' : 'fa-moon';
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium ${litCls}"><i class="fa-solid ${litIcon} text-[9px]"></i> ${litLabel}</span>`);
   }
 
   // Surface
   if (infra.surface) {
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${infra.surface}</span>`);
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700"><i class="fa-solid fa-layer-group text-[9px]"></i> ${infra.surface}</span>`);
   }
 
   // One-way
   if (infra.oneway === 'yes') {
-    pills.push(`<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">One-way</span>`);
+    pills.push(`<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700"><i class="fa-solid fa-arrow-right text-[9px]"></i> One-way</span>`);
   }
 
-  const nameHtml = infra.name ? `<span class="text-[13px] font-medium text-gray-800">${escapeHtml(infra.name)}</span>` : '';
-  el.innerHTML = `${nameHtml}<div class="flex flex-wrap gap-1.5 ${nameHtml ? 'mt-1.5' : ''}">${pills.join('')}</div>`;
+  const nameHtml = infra.name ? `<div class="flex items-center gap-1.5 mb-1.5"><i class="fa-solid fa-location-dot text-[11px] text-slate-400"></i><span class="text-[13px] font-medium text-gray-800">${escapeHtml(infra.name)}</span></div>` : '';
+  el.innerHTML = `${nameHtml}<div class="flex flex-wrap gap-1.5">${pills.join('')}</div>`;
 }
 
 // Generate marker images for each type × scariness combo using canvas
 function generateMarkerImages() {
   const ratio = window.devicePixelRatio || 1;
-  const size = 32;
+  const size = 24;
   const pxSize = size * ratio;
   const canvas = document.createElement('canvas');
   canvas.width = pxSize;
@@ -383,7 +385,7 @@ function generateMarkerImages() {
       ctx.fill();
 
       // White FA icon
-      const iconSize = Math.round(14 * ratio);
+      const iconSize = Math.round(11 * ratio);
       ctx.fillStyle = '#ffffff';
       ctx.font = `900 ${iconSize}px "Font Awesome 6 Free"`;
       ctx.textAlign = 'center';
@@ -396,7 +398,7 @@ function generateMarkerImages() {
   }
 
   // Generate annoyance markers (rounded squares, single amber color)
-  const r = Math.round(6 * ratio); // corner radius
+  const r = Math.round(5 * ratio); // corner radius
   for (const type of Object.keys(ANNOYANCE_TYPE_LABELS)) {
     ctx.clearRect(0, 0, pxSize, pxSize);
     // White border rounded square
@@ -412,7 +414,7 @@ function generateMarkerImages() {
     ctx.fillStyle = ANNOYANCE_MARKER_COLOR;
     ctx.fill();
     // White FA icon
-    const iconSize = Math.round(14 * ratio);
+    const iconSize = Math.round(11 * ratio);
     ctx.fillStyle = '#ffffff';
     ctx.font = `900 ${iconSize}px "Font Awesome 6 Free"`;
     ctx.textAlign = 'center';
@@ -652,7 +654,7 @@ function addMapLayers() {
           '-',
           ['get', 'scariness']
         ],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 10, 0.9, 14, 1.1],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
         'icon-allow-overlap': true
       }
     });
@@ -673,7 +675,7 @@ function addMapLayers() {
       filter: ['has', 'point_count'],
       paint: {
         'circle-color': '#f59e0b',
-        'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 25, 30],
+        'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 25, 22],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#fff'
       }
@@ -699,7 +701,7 @@ function addMapLayers() {
       filter: ['!', ['has', 'point_count']],
       layout: {
         'icon-image': ['concat', 'annoyance-', ['get', 'annoyanceType']],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 10, 0.9, 14, 1.1],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
         'icon-allow-overlap': true
       }
     });
@@ -1391,6 +1393,15 @@ function resetForm() {
   if (riderAge) riderAge.value = '';
   if (rideType) rideType.value = '';
   if (bikeType) bikeType.value = '';
+  const riderGender = document.getElementById('rider-gender');
+  if (riderGender) riderGender.value = '';
+  // Reset contact fields
+  const cName = document.getElementById('contact-name');
+  const cEmail = document.getElementById('contact-email');
+  const cConsent = document.getElementById('contact-consent');
+  if (cName) cName.value = '';
+  if (cEmail) cEmail.value = '';
+  if (cConsent) cConsent.checked = false;
   document.getElementById('incident-submit').disabled = true;
 }
 
@@ -1481,6 +1492,17 @@ function resetAnnoyanceForm() {
   annoyanceDescEl.value = '';
   annoyanceCharCountEl.textContent = '0 / 1000';
   annoyanceCharCountEl.classList.remove('error');
+  // Reset about you / contact fields
+  const aGender = document.getElementById('annoyance-gender');
+  const aAge = document.getElementById('annoyance-age');
+  const aCName = document.getElementById('annoyance-contact-name');
+  const aCEmail = document.getElementById('annoyance-contact-email');
+  const aCConsent = document.getElementById('annoyance-contact-consent');
+  if (aGender) aGender.value = '';
+  if (aAge) aAge.value = '';
+  if (aCName) aCName.value = '';
+  if (aCEmail) aCEmail.value = '';
+  if (aCConsent) aCConsent.checked = false;
   document.getElementById('annoyance-submit').disabled = true;
 }
 
@@ -1509,6 +1531,13 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     const timeVal = document.getElementById('annoyance-time').value;
     const dateTime = new Date(`${dateVal}T${timeVal}`);
 
+    // Collect optional fields
+    const annGender = document.getElementById('annoyance-gender').value || null;
+    const annAge = document.getElementById('annoyance-age').value || null;
+    const annContactName = (document.getElementById('annoyance-contact-name').value || '').trim() || null;
+    const annContactEmail = (document.getElementById('annoyance-contact-email').value || '').trim() || null;
+    const annContactConsent = document.getElementById('annoyance-contact-consent').checked;
+
     const annoyanceData = {
       geometry: {
         type: 'Point',
@@ -1527,6 +1556,11 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
       reportCount: 0
     };
 
+    if (annGender) annoyanceData.riderGender = annGender;
+    if (annAge) annoyanceData.riderAge = annAge;
+    if (annContactName) annoyanceData.contactName = annContactName;
+    if (annContactEmail) annoyanceData.contactEmail = annContactEmail;
+    if (annContactConsent) annoyanceData.contactConsent = true;
     if (currentInfrastructure) annoyanceData.infrastructure = currentInfrastructure;
 
     await db.collection('annoyances').add(annoyanceData);
@@ -1579,8 +1613,14 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     // Collect optional rider fields
     const riderAge = document.getElementById('rider-age').value || null;
+    const riderGender = document.getElementById('rider-gender').value || null;
     const rideType = document.getElementById('ride-type').value || null;
     const bikeType = document.getElementById('bike-type').value || null;
+
+    // Contact fields
+    const contactName = (document.getElementById('contact-name').value || '').trim() || null;
+    const contactEmail = (document.getElementById('contact-email').value || '').trim() || null;
+    const contactConsent = document.getElementById('contact-consent').checked;
 
     const incidentData = {
       geometry: {
@@ -1611,8 +1651,14 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
     // Add rider info
     if (selectedReporter) incidentData.reportingFor = selectedReporter;
     if (riderAge) incidentData.riderAge = riderAge;
+    if (riderGender) incidentData.riderGender = riderGender;
     if (rideType) incidentData.rideType = rideType;
     if (bikeType) incidentData.bikeType = bikeType;
+
+    // Add contact info
+    if (contactName) incidentData.contactName = contactName;
+    if (contactEmail) incidentData.contactEmail = contactEmail;
+    if (contactConsent) incidentData.contactConsent = true;
 
     // Add auto-detected infrastructure
     if (currentInfrastructure) incidentData.infrastructure = currentInfrastructure;

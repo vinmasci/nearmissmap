@@ -323,6 +323,16 @@
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
+              <label class="block text-[11px] text-gray-400 mb-1">Gender</label>
+              <select id="rider-gender" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+                <option value="">Select...</option>
+                <option value="man">Man</option>
+                <option value="woman">Woman</option>
+                <option value="non_binary">Non-binary</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-[11px] text-gray-400 mb-1">Ride type</label>
               <select id="ride-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
                 <option value="">Select...</option>
@@ -335,19 +345,19 @@
                 <option value="leisure">Leisure / Recreation</option>
               </select>
             </div>
-            <div>
-              <label class="block text-[11px] text-gray-400 mb-1">Bike type</label>
-              <select id="bike-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
-                <option value="">Select...</option>
-                <option value="road">Road Bike</option>
-                <option value="mountain">Mountain Bike</option>
-                <option value="gravel">Gravel Bike</option>
-                <option value="ebike">E-bike</option>
-                <option value="cargo">Cargo Bike</option>
-                <option value="folding">Folding Bike</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] text-gray-400 mb-1">Bike type</label>
+            <select id="bike-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+              <option value="">Select...</option>
+              <option value="road">Road Bike</option>
+              <option value="mountain">Mountain Bike</option>
+              <option value="gravel">Gravel Bike</option>
+              <option value="ebike">E-bike</option>
+              <option value="cargo">Cargo Bike</option>
+              <option value="folding">Folding Bike</option>
+              <option value="other">Other</option>
+            </select>
           </div>
         </div>
       </div>
@@ -357,8 +367,24 @@
       <!-- Description -->
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description <span class="text-red-500">*</span></label>
-        <textarea id="incident-description" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-y" placeholder="Describe what happened..." maxlength="1000"></textarea>
+        <textarea id="incident-description" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-y" placeholder="Describe what happened and how it made you feel..." maxlength="1000"></textarea>
         <p id="char-count" class="text-[11px] text-gray-400 text-right mt-1">0 / 1000</p>
+      </div>
+
+      <hr class="border-gray-100">
+
+      <!-- Contact (Optional) -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contact (Optional)</label>
+        <p class="text-[11px] text-gray-400 mb-2">So researchers can follow up if needed</p>
+        <div class="space-y-2">
+          <input type="text" id="contact-name" placeholder="Your name" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <input type="email" id="contact-email" placeholder="Your email" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" id="contact-consent" class="mt-0.5 shrink-0 border-gray-200 rounded text-blue-600 focus:ring-blue-500">
+            <span class="text-[12px] text-gray-500 leading-tight">I consent to being contacted regarding my report for future cycling safety research</span>
+          </label>
+        </div>
       </div>
     </div>
     <div class="px-5 py-3.5 bg-slate-50 border-t border-gray-200 shrink-0">
@@ -484,11 +510,59 @@
 
       <hr class="border-gray-100">
 
+      <!-- About You -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">About You</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] text-gray-400 mb-1">Gender</label>
+            <select id="annoyance-gender" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+              <option value="">Select...</option>
+              <option value="man">Man</option>
+              <option value="woman">Woman</option>
+              <option value="non_binary">Non-binary</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-gray-400 mb-1">Age range</label>
+            <select id="annoyance-age" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+              <option value="">Select...</option>
+              <option value="under_18">Under 18</option>
+              <option value="18_25">18–25</option>
+              <option value="26_35">26–35</option>
+              <option value="36_45">36–45</option>
+              <option value="46_55">46–55</option>
+              <option value="56_65">56–65</option>
+              <option value="65_plus">65+</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-gray-100">
+
       <!-- Description -->
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description <span class="text-red-500">*</span></label>
-        <textarea id="annoyance-description" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-y" placeholder="Describe what's annoying..." maxlength="1000"></textarea>
+        <textarea id="annoyance-description" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-y" placeholder="Describe what's annoying and how it affects your ride..." maxlength="1000"></textarea>
         <p id="annoyance-char-count" class="text-[11px] text-gray-400 text-right mt-1">0 / 1000</p>
+      </div>
+
+      <hr class="border-gray-100">
+
+      <!-- Contact (Optional) -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contact (Optional)</label>
+        <p class="text-[11px] text-gray-400 mb-2">So researchers can follow up if needed</p>
+        <div class="space-y-2">
+          <input type="text" id="annoyance-contact-name" placeholder="Your name" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <input type="email" id="annoyance-contact-email" placeholder="Your email" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" id="annoyance-contact-consent" class="mt-0.5 shrink-0 border-gray-200 rounded text-blue-600 focus:ring-blue-500">
+            <span class="text-[12px] text-gray-500 leading-tight">I consent to being contacted regarding my report for future cycling safety research</span>
+          </label>
+        </div>
       </div>
     </div>
     <div class="px-5 py-3.5 bg-slate-50 border-t border-gray-200 shrink-0">
