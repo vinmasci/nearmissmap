@@ -38,13 +38,13 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .reporter-btn.selected { border-color: #3b82f6 !important; background: #eff6ff !important; color: #2563eb !important; }
 
 /* Annoyance form selected states */
-.annoyance-type-btn.selected { border-color: #f59e0b !important; background: #fffbeb !important; color: #d97706 !important; }
+.annoyance-type-btn.selected { border-color: #8b5cf6 !important; background: #f5f3ff !important; color: #7c3aed !important; }
 .annoyance-level-btn.selected { color: white !important; }
 .annoyance-level-btn[data-level="mildly"].selected { background: #fbbf24 !important; border-color: #fbbf24 !important; }
 .annoyance-level-btn[data-level="moderately"].selected { background: #f59e0b !important; border-color: #f59e0b !important; }
 .annoyance-level-btn[data-level="very"].selected { background: #f97316 !important; border-color: #f97316 !important; }
 .annoyance-level-btn[data-level="infuriating"].selected { background: #ea580c !important; border-color: #ea580c !important; }
-.ongoing-btn.selected { border-color: #f59e0b !important; background: #fffbeb !important; color: #d97706 !important; }
+.ongoing-btn.selected { border-color: #8b5cf6 !important; background: #f5f3ff !important; color: #7c3aed !important; }
 
 /* Pulsing marker animation */
 .pulsing-marker {

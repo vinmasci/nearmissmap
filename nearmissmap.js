@@ -201,7 +201,7 @@ const ANNOYANCE_FA_UNICODE = {
   bad_intersection: '\uf5eb', flooding: '\uf773', other: '\uf059'
 };
 
-const ANNOYANCE_MARKER_COLOR = '#f59e0b';
+const ANNOYANCE_MARKER_COLOR = '#8b5cf6';
 
 // ============================================
 // INFRASTRUCTURE AUTO-DETECTION (OSM Overpass)
@@ -605,9 +605,9 @@ function addMapLayers() {
     paint: {
       'circle-color': [
         'step', ['get', 'point_count'],
-        '#f59e0b', 10,
-        '#f97316', 25,
-        '#ef4444'
+        '#8b5cf6', 10,
+        '#7c3aed', 25,
+        '#6d28d9'
       ],
       'circle-radius': [
         'step', ['get', 'point_count'],
@@ -674,7 +674,7 @@ function addMapLayers() {
       source: 'annoyances',
       filter: ['has', 'point_count'],
       paint: {
-        'circle-color': '#f59e0b',
+        'circle-color': '#8b5cf6',
         'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 25, 22],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#fff'
