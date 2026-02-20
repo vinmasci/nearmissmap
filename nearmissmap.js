@@ -1811,25 +1811,21 @@ window.showLoginModal = function() {
   document.getElementById('login-options').classList.remove('hidden');
   document.getElementById('email-form').classList.add('hidden');
   document.getElementById('login-error').textContent = '';
-  const el = document.getElementById('login-modal');
-  el.classList.remove('hidden');
-  el.classList.add('open');
+  document.getElementById('login-modal').classList.remove('hidden');
   // Add backdrop
   let backdrop = document.getElementById('login-backdrop');
   if (!backdrop) {
     backdrop = document.createElement('div');
     backdrop.id = 'login-backdrop';
-    backdrop.className = 'hs-overlay-backdrop fixed inset-0 z-[1999]';
-    backdrop.addEventListener('click', hideLoginModal);
+    backdrop.className = 'fixed inset-0 z-[1999] bg-black/50';
+    backdrop.addEventListener('click', window.hideLoginModal);
     document.body.appendChild(backdrop);
   }
   backdrop.classList.remove('hidden');
 };
 
 window.hideLoginModal = function() {
-  const el = document.getElementById('login-modal');
-  el.classList.add('hidden');
-  el.classList.remove('open');
+  document.getElementById('login-modal').classList.add('hidden');
   const backdrop = document.getElementById('login-backdrop');
   if (backdrop) backdrop.classList.add('hidden');
 };
