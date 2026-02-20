@@ -1,0 +1,126 @@
+/* Navbar */
+#nmm-navbar { width: 100%; max-width: 100vw; overflow: hidden; }
+
+/* Map fills viewport below navbar */
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+#map { position: fixed !important; top: 64px !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: calc(100vh - 64px) !important; z-index: 1; }
+
+/* Incident panel — slide in/out */
+.incident-panel {
+  position: fixed; top: 64px; right: 0; width: 420px; height: calc(100vh - 64px);
+  background: #fff; box-shadow: -4px 0 16px rgba(0,0,0,0.12); z-index: 200;
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 0.3s ease; overflow: hidden;
+}
+.incident-panel.visible { transform: translateX(0); }
+
+@media (max-width: 768px) {
+  .incident-panel {
+    width: 100%; top: auto; bottom: 0; height: 75vh;
+    border-radius: 16px 16px 0 0; transform: translateY(100%);
+  }
+  .incident-panel.visible { transform: translateY(0); }
+}
+
+/* Selected states for button groups */
+.type-btn.selected { border-color: #ef4444 !important; background: #fef2f2 !important; color: #dc2626 !important; }
+.scariness-btn.selected { color: white !important; }
+.scariness-btn[data-scariness="not_scary"].selected { background: #22c55e !important; border-color: #22c55e !important; }
+.scariness-btn[data-scariness="a_bit_scary"].selected { background: #f59e0b !important; border-color: #f59e0b !important; }
+.scariness-btn[data-scariness="fairly_scary"].selected { background: #f97316 !important; border-color: #f97316 !important; }
+.scariness-btn[data-scariness="very_scary"].selected { background: #ef4444 !important; border-color: #ef4444 !important; }
+.contact-btn.selected { border-color: #3b82f6 !important; background: #eff6ff !important; color: #2563eb !important; }
+.injury-btn.selected { border-color: #3b82f6 !important; background: #eff6ff !important; color: #2563eb !important; }
+.party-btn.selected { border-color: #3b82f6 !important; background: #eff6ff !important; color: #2563eb !important; }
+.reporter-btn.selected { border-color: #3b82f6 !important; background: #eff6ff !important; color: #2563eb !important; }
+
+/* Annoyance form selected states */
+.annoyance-type-btn.selected { border-color: #f59e0b !important; background: #fffbeb !important; color: #d97706 !important; }
+.annoyance-level-btn.selected { color: white !important; }
+.annoyance-level-btn[data-level="mildly"].selected { background: #fbbf24 !important; border-color: #fbbf24 !important; }
+.annoyance-level-btn[data-level="moderately"].selected { background: #f59e0b !important; border-color: #f59e0b !important; }
+.annoyance-level-btn[data-level="very"].selected { background: #f97316 !important; border-color: #f97316 !important; }
+.annoyance-level-btn[data-level="infuriating"].selected { background: #ea580c !important; border-color: #ea580c !important; }
+.ongoing-btn.selected { border-color: #f59e0b !important; background: #fffbeb !important; color: #d97706 !important; }
+
+/* Pulsing marker animation */
+.pulsing-marker {
+  width: 20px; height: 20px; border-radius: 50%; background: #ef4444;
+  border: 3px solid white; box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+  cursor: grab; position: relative;
+}
+.pulsing-marker::after {
+  content: ''; position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+  border-radius: 50%; border: 2px solid rgba(239,68,68,0.4);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 32px; left: 50%; z-index: 9999;
+  transform: translateX(-50%) translateY(100px);
+  background: #111827; color: white; padding: 12px 24px;
+  border-radius: 10px; font-size: 14px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0;
+  transition: all 0.3s ease; pointer-events: none;
+}
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Google Places autocomplete dropdown — Preline-styled */
+.pac-container {
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important;
+  margin-top: 4px !important;
+  z-index: 10000 !important;
+}
+.pac-item {
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  border-top: 1px solid #f3f4f6 !important;
+  cursor: pointer !important;
+}
+.pac-item:first-child { border-top: none !important; }
+.pac-item:hover, .pac-item-selected {
+  background: #f3f4f6 !important;
+}
+.pac-item-query { font-size: 13px !important; font-weight: 500 !important; }
+.pac-icon { display: none !important; }
+
+/* Mapbox popup — Preline-styled */
+.mapboxgl-popup-content {
+  padding: 16px; border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+.mapboxgl-popup-close-button {
+  width: 28px; height: 28px; top: 8px; right: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0; /* hide default × */
+  border-radius: 8px; color: #9ca3af;
+  transition: background 0.15s, color 0.15s;
+}
+.mapboxgl-popup-close-button::after {
+  content: '';
+  display: block; width: 14px; height: 14px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'/%3e%3cline x1='6' y1='6' x2='18' y2='18'/%3e%3c/svg%3e");
+  background-size: contain; background-repeat: no-repeat;
+}
+.mapboxgl-popup-close-button:hover {
+  background: #f3f4f6; color: #374151;
+}
+.mapboxgl-popup-close-button:hover::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5' stroke-linecap='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'/%3e%3cline x1='6' y1='6' x2='18' y2='18'/%3e%3c/svg%3e");
+}
+.mapboxgl-popup-tip { border-top-color: white; }
+
+/* Char count error */
+#char-count.error { color: #ef4444 !important; }
+
+/* Spinner keyframe */
+@keyframes spin { to { transform: rotate(360deg); } }
