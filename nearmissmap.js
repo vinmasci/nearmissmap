@@ -619,7 +619,7 @@ function addMapLayers() {
           'line-opacity': 0.3
         },
         layout: { 'line-cap': 'round', 'line-join': 'round' }
-      }, 'incident-clusters');
+      }, 'report-clusters');
 
       // Bike lanes — dashed line
       map.addLayer({
@@ -634,16 +634,16 @@ function addMapLayers() {
           'line-dasharray': [2, 3]
         },
         layout: { 'line-cap': 'round', 'line-join': 'round' }
-      }, 'incident-clusters');
+      }, 'report-clusters');
 
       console.log(`Loaded ${data.features.length} cycling infrastructure segments`);
     })
     .catch(e => console.warn('Cycling infrastructure not loaded:', e));
 
-  // --- 3. Incident Markers (GeoJSON source, filled later) ---
-  map.addSource('incidents', {
+  // --- 3. Combined Reports Source (incidents + annoyances clustered together) ---
+  map.addSource('reports', {
     type: 'geojson',
-    data: incidentsData,
+    data: { type: 'FeatureCollection', features: [] },
     cluster: true,
     clusterMaxZoom: 14,
     clusterRadius: 50
@@ -651,9 +651,9 @@ function addMapLayers() {
 
   // Cluster circles
   map.addLayer({
-    id: 'incident-clusters',
+    id: 'report-clusters',
     type: 'circle',
-    source: 'incidents',
+    source: 'reports',
     filter: ['has', 'point_count'],
     paint: {
       'circle-color': [
@@ -675,9 +675,9 @@ function addMapLayers() {
 
   // Cluster count labels
   map.addLayer({
-    id: 'incident-cluster-count',
+    id: 'report-cluster-count',
     type: 'symbol',
-    source: 'incidents',
+    source: 'reports',
     filter: ['has', 'point_count'],
     layout: {
       'text-field': '{point_count_abbreviated}',
@@ -693,12 +693,12 @@ function addMapLayers() {
   document.fonts.ready.then(() => {
     generateMarkerImages();
 
-    // Individual incident markers (symbol layer with type-based icons)
+    // Individual incident markers (filtered from combined source)
     map.addLayer({
       id: 'incident-points',
       type: 'symbol',
-      source: 'incidents',
-      filter: ['!', ['has', 'point_count']],
+      source: 'reports',
+      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', '_reportType'], 'incident']],
       layout: {
         'icon-image': [
           'concat',
@@ -712,51 +712,12 @@ function addMapLayers() {
       }
     });
 
-    // --- 4. Annoyance Markers ---
-    map.addSource('annoyances', {
-      type: 'geojson',
-      data: annoyancesData,
-      cluster: true,
-      clusterMaxZoom: 14,
-      clusterRadius: 50
-    });
-
-    map.addLayer({
-      id: 'annoyance-clusters',
-      type: 'circle',
-      source: 'annoyances',
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': [
-          'step', ['get', 'point_count'],
-          '#8b5cf6', 10,
-          '#7c3aed', 25,
-          '#6d28d9'
-        ],
-        'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 25, 22],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#fff'
-      }
-    });
-
-    map.addLayer({
-      id: 'annoyance-cluster-count',
-      type: 'symbol',
-      source: 'annoyances',
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
-        'text-size': 13
-      },
-      paint: { 'text-color': '#fff' }
-    });
-
+    // Individual annoyance markers (filtered from combined source)
     map.addLayer({
       id: 'annoyance-points',
       type: 'symbol',
-      source: 'annoyances',
-      filter: ['!', ['has', 'point_count']],
+      source: 'reports',
+      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', '_reportType'], 'annoyance']],
       layout: {
         'icon-image': ['concat', 'annoyance-', ['get', 'annoyanceType']],
         'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
@@ -772,10 +733,10 @@ function addMapLayers() {
   // --- Click handlers ---
 
   // Click cluster to zoom
-  map.on('click', 'incident-clusters', (e) => {
-    const features = map.queryRenderedFeatures(e.point, { layers: ['incident-clusters'] });
+  map.on('click', 'report-clusters', (e) => {
+    const features = map.queryRenderedFeatures(e.point, { layers: ['report-clusters'] });
     const clusterId = features[0].properties.cluster_id;
-    map.getSource('incidents').getClusterExpansionZoom(clusterId, (err, zoom) => {
+    map.getSource('reports').getClusterExpansionZoom(clusterId, (err, zoom) => {
       if (err) return;
       map.easeTo({ center: features[0].geometry.coordinates, zoom });
     });
@@ -893,16 +854,6 @@ function addMapLayers() {
       .addTo(map);
   });
 
-  // Click annoyance cluster to zoom
-  map.on('click', 'annoyance-clusters', (e) => {
-    const features = map.queryRenderedFeatures(e.point, { layers: ['annoyance-clusters'] });
-    const clusterId = features[0].properties.cluster_id;
-    map.getSource('annoyances').getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err) return;
-      map.easeTo({ center: features[0].geometry.coordinates, zoom });
-    });
-  });
-
   // Click annoyance point to show popup
   map.on('click', 'annoyance-points', (e) => {
     if (isPlacingMarker) return;
@@ -959,12 +910,10 @@ function addMapLayers() {
   });
 
   // Cursor styles
-  map.on('mouseenter', 'incident-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'incident-clusters', () => { map.getCanvas().style.cursor = ''; });
+  map.on('mouseenter', 'report-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'report-clusters', () => { map.getCanvas().style.cursor = ''; });
   map.on('mouseenter', 'incident-points', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'incident-points', () => { map.getCanvas().style.cursor = ''; });
-  map.on('mouseenter', 'annoyance-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'annoyance-clusters', () => { map.getCanvas().style.cursor = ''; });
   map.on('mouseenter', 'annoyance-points', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'annoyance-points', () => { map.getCanvas().style.cursor = ''; });
 
@@ -996,6 +945,17 @@ function addMapLayers() {
 // LOAD INCIDENTS FROM FIRESTORE
 // ============================================
 
+// Merge incidents + annoyances into the single reports source
+function updateReportsSource() {
+  const combined = {
+    type: 'FeatureCollection',
+    features: [...incidentsData.features, ...annoyancesData.features]
+  };
+  if (map.getSource('reports')) {
+    map.getSource('reports').setData(combined);
+  }
+}
+
 function loadIncidents() {
   if (!db) return;
 
@@ -1015,6 +975,7 @@ function loadIncidents() {
         id: doc.id,
         geometry: d.geometry,
         properties: {
+          _reportType: 'incident',
           id: doc.id,
           incidentType: d.incidentType,
           scariness: d.scariness || d.severity || '',
@@ -1027,16 +988,16 @@ function loadIncidents() {
           reportCount: d.reportCount || 0,
           flagged: d.flagged || false,
           photoURL: d.photoURL || '',
+          photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
+          reporterName: d.reporterName || 'Anonymous',
           infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
         }
       });
     });
 
     incidentsData = { type: 'FeatureCollection', features };
-    if (map.getSource('incidents')) {
-      map.getSource('incidents').setData(incidentsData);
-    }
-    applyFilters(); // Re-apply any active filters
+    updateReportsSource();
+    applyFilters();
     updateIncidentCount();
   }, err => {
     console.error('Error loading incidents:', err);
@@ -1065,6 +1026,7 @@ function loadAnnoyances() {
         id: doc.id,
         geometry: d.geometry,
         properties: {
+          _reportType: 'annoyance',
           id: doc.id,
           annoyanceType: d.annoyanceType,
           isOngoing: d.isOngoing || false,
@@ -1072,15 +1034,15 @@ function loadAnnoyances() {
           roadName: d.roadName || '',
           flagged: d.flagged || false,
           photoURL: d.photoURL || '',
+          photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
+          reporterName: d.reporterName || 'Anonymous',
           infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
         }
       });
     });
 
     annoyancesData = { type: 'FeatureCollection', features };
-    if (map.getSource('annoyances')) {
-      map.getSource('annoyances').setData(annoyancesData);
-    }
+    updateReportsSource();
     applyFilters();
     updateIncidentCount();
   }, err => {
@@ -1195,52 +1157,47 @@ function applyFilters() {
   const type = document.getElementById('filter-type').value;
   const scariness = document.getElementById('filter-scariness').value;
 
-  // Show/hide incident layers based on report type filter
+  // Show/hide point layers based on report type filter
   const showIncidents = !reportType || reportType === 'incident';
   const showAnnoyances = !reportType || reportType === 'annoyance';
 
-  const incidentVis = showIncidents ? 'visible' : 'none';
-  const annoyanceVis = showAnnoyances ? 'visible' : 'none';
-
-  ['incident-clusters', 'incident-cluster-count', 'incident-points'].forEach(id => {
-    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', incidentVis);
-  });
-  ['annoyance-clusters', 'annoyance-cluster-count', 'annoyance-points'].forEach(id => {
-    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', annoyanceVis);
-  });
+  if (map.getLayer('incident-points')) map.setLayoutProperty('incident-points', 'visibility', showIncidents ? 'visible' : 'none');
+  if (map.getLayer('annoyance-points')) map.setLayoutProperty('annoyance-points', 'visibility', showAnnoyances ? 'visible' : 'none');
 
   // Build filter for unclustered incident points
-  const filters = ['all', ['!', ['has', 'point_count']]];
-  if (type) filters.push(['==', ['get', 'incidentType'], type]);
-  if (scariness) filters.push(['==', ['get', 'scariness'], scariness]);
+  const incidentFilter = ['all', ['!', ['has', 'point_count']], ['==', ['get', '_reportType'], 'incident']];
+  if (type) incidentFilter.push(['==', ['get', 'incidentType'], type]);
+  if (scariness) incidentFilter.push(['==', ['get', 'scariness'], scariness]);
+  if (map.getLayer('incident-points')) map.setFilter('incident-points', incidentFilter);
 
-  if (map.getLayer('incident-points')) map.setFilter('incident-points', filters);
-
-  // For clusters, filter the source data directly
+  // Rebuild the combined source with filters applied
+  let filteredIncidents = incidentsData.features;
   if (type || scariness) {
-    const filtered = incidentsData.features.filter(f => {
+    filteredIncidents = filteredIncidents.filter(f => {
       const p = f.properties;
       if (type && p.incidentType !== type) return false;
       if (scariness && p.scariness !== scariness) return false;
       return true;
     });
-    if (map.getSource('incidents')) map.getSource('incidents').setData({ type: 'FeatureCollection', features: filtered });
-  } else {
-    if (map.getSource('incidents')) map.getSource('incidents').setData(incidentsData);
   }
+  if (!showIncidents) filteredIncidents = [];
 
-  // Annoyance source always shows full data (no type/scariness sub-filter for annoyances)
-  if (map.getSource('annoyances')) map.getSource('annoyances').setData(annoyancesData);
+  const filteredAnnoyances = showAnnoyances ? annoyancesData.features : [];
+
+  if (map.getSource('reports')) {
+    map.getSource('reports').setData({
+      type: 'FeatureCollection',
+      features: [...filteredIncidents, ...filteredAnnoyances]
+    });
+  }
 
   updateIncidentCount();
 }
 
 function updateIncidentCount() {
   const reportType = document.getElementById('filter-report-type').value;
-  const incidentSource = map.getSource('incidents');
-  const annoyanceSource = map.getSource('annoyances');
-  const incidentCount = (incidentSource && incidentSource._data && incidentSource._data.features) ? incidentSource._data.features.length : 0;
-  const annoyanceCount = (annoyanceSource && annoyanceSource._data && annoyanceSource._data.features) ? annoyanceSource._data.features.length : 0;
+  const incidentCount = incidentsData.features.length;
+  const annoyanceCount = annoyancesData.features.length;
 
   let text;
   if (reportType === 'incident') {
