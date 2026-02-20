@@ -431,6 +431,10 @@ function generateMarkerImages() {
 // MAP INIT
 // ============================================
 
+// Register PMTiles protocol for cycling infrastructure vector tiles
+const pmtilesProtocol = new pmtiles.Protocol();
+mapboxgl.addProtocol('pmtiles', pmtilesProtocol.tile);
+
 map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
@@ -601,44 +605,44 @@ function addMapLayers() {
   // Load cycling routes from Firestore
   loadCyclingRoutes();
 
-  // --- Cycling Infrastructure (OSM bike lanes & paths) ---
-  fetch('cycling-infra.geojson')
-    .then(r => r.json())
-    .then(data => {
-      map.addSource('cycling-infra', { type: 'geojson', data });
+  // --- Cycling Infrastructure (PMTiles vector tiles — Australia-wide OSM data) ---
+  map.addSource('cycling-infra', {
+    type: 'vector',
+    url: 'pmtiles://cycling-infra.pmtiles'
+  });
 
-      // Shared paths / bike paths — solid line
-      map.addLayer({
-        id: 'infra-paths',
-        type: 'line',
-        source: 'cycling-infra',
-        filter: ['==', ['get', 't'], 'path'],
-        paint: {
-          'line-color': '#3b82f6',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2.5, 18, 4],
-          'line-opacity': 0.3
-        },
-        layout: { 'line-cap': 'round', 'line-join': 'round' }
-      }, 'report-clusters');
+  // Shared paths / bike paths — solid line
+  map.addLayer({
+    id: 'infra-paths',
+    type: 'line',
+    source: 'cycling-infra',
+    'source-layer': 'cycling-infra',
+    filter: ['==', ['get', 't'], 'path'],
+    paint: {
+      'line-color': '#3b82f6',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 10, 1, 14, 2.5, 18, 4],
+      'line-opacity': 0.3
+    },
+    layout: { 'line-cap': 'round', 'line-join': 'round' }
+  }, 'report-clusters');
 
-      // Bike lanes — dashed line
-      map.addLayer({
-        id: 'infra-lanes',
-        type: 'line',
-        source: 'cycling-infra',
-        filter: ['==', ['get', 't'], 'lane'],
-        paint: {
-          'line-color': '#3b82f6',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 14, 2, 18, 3],
-          'line-opacity': 0.25,
-          'line-dasharray': [2, 3]
-        },
-        layout: { 'line-cap': 'round', 'line-join': 'round' }
-      }, 'report-clusters');
+  // Bike lanes — dashed line
+  map.addLayer({
+    id: 'infra-lanes',
+    type: 'line',
+    source: 'cycling-infra',
+    'source-layer': 'cycling-infra',
+    filter: ['==', ['get', 't'], 'lane'],
+    paint: {
+      'line-color': '#3b82f6',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.4, 10, 0.8, 14, 2, 18, 3],
+      'line-opacity': 0.25,
+      'line-dasharray': [2, 3]
+    },
+    layout: { 'line-cap': 'round', 'line-join': 'round' }
+  }, 'report-clusters');
 
-      console.log(`Loaded ${data.features.length} cycling infrastructure segments`);
-    })
-    .catch(e => console.warn('Cycling infrastructure not loaded:', e));
+  console.log('Cycling infrastructure source added (PMTiles, Australia-wide)');
 
   // --- 3. Combined Reports Source (incidents + annoyances clustered together) ---
   map.addSource('reports', {
