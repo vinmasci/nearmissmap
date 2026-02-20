@@ -33,19 +33,19 @@
 </head>
 <body class="font-['Inter',sans-serif]">
   <!-- Navbar -->
-  <header id="nmm-navbar" class="sticky top-0 z-[9999] flex flex-wrap md:justify-start md:flex-nowrap w-full bg-white border-b border-gray-200 shadow-sm" style="font-family: 'DM Sans', sans-serif;">
+  <header id="nmm-navbar" class="sticky top-0 z-[9999] flex flex-wrap md:justify-start md:flex-nowrap w-full bg-slate-900 shadow-lg" style="font-family: 'DM Sans', sans-serif;">
     <nav class="w-full mx-auto px-4">
-      <div class="flex items-center justify-between h-16">
+      <div class="flex items-center justify-between h-14">
         <div class="flex items-center gap-x-2.5">
-          <div class="size-9 rounded-lg bg-red-600 flex items-center justify-center">
-            <i class="fa-solid fa-triangle-exclamation text-white text-lg"></i>
+          <div class="size-8 rounded-lg bg-red-500 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation text-white text-sm"></i>
           </div>
           <div class="leading-tight">
-            <span class="text-lg font-bold text-gray-800">Near Miss Map</span>
-            <span class="block text-[11px] text-gray-400 -mt-0.5">Report cycling incidents & annoyances</span>
+            <span class="text-base font-bold text-white">Near Miss Map</span>
+            <span class="block text-[10px] text-slate-400 -mt-0.5">Report cycling incidents & annoyances</span>
           </div>
         </div>
-        <a href="https://vicbug.app" target="_blank" class="text-xs text-gray-400 hover:text-blue-600 transition-colors">
+        <a href="https://vicbug.app" target="_blank" class="text-[11px] text-slate-500 hover:text-slate-300 transition-colors">
           Powered by VicBUG
         </a>
       </div>
@@ -56,28 +56,28 @@
   <div id="map"></div>
 
   <!-- Top bar: Search + Filters -->
-  <div class="fixed top-[68px] left-2 right-2 z-[150] flex flex-col gap-2 md:flex-row md:items-center md:left-3 md:right-3">
+  <div class="fixed top-[60px] left-2 right-2 z-[150] flex flex-col gap-2 md:flex-row md:items-center md:left-3 md:right-3">
     <!-- Search row -->
     <div class="flex gap-2 items-center">
       <div class="flex-1 min-w-0 relative">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="search-input" placeholder="Search location..." class="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-xl shadow-md text-sm text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 focus:ring-2 focus:outline-none">
       </div>
-      <button id="locate-btn" title="My location" class="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-white rounded-xl shadow-md border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-colors">
+      <button id="locate-btn" title="My location" class="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-slate-900 rounded-xl shadow-md text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
       </button>
-      <button id="reset-view-btn" title="Reset view" class="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-white rounded-xl shadow-md border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-colors md:hidden">
+      <button id="reset-view-btn" title="Reset view" class="shrink-0 w-10 h-10 inline-flex items-center justify-center bg-slate-900 rounded-xl shadow-md text-slate-300 hover:text-white hover:bg-slate-800 transition-colors md:hidden">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
       </button>
     </div>
     <!-- Filter row -->
-    <div id="filter-bar" class="flex flex-nowrap items-center gap-1.5 bg-white/95 backdrop-blur-sm py-1.5 px-2.5 rounded-xl shadow-md overflow-x-auto text-xs md:py-2 md:px-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <select id="filter-report-type" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
+    <div id="filter-bar" class="flex flex-nowrap items-center gap-1.5 bg-slate-900/90 backdrop-blur-sm py-1.5 px-2.5 rounded-xl shadow-lg overflow-x-auto text-xs md:py-2 md:px-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <select id="filter-report-type" class="shrink-0 py-1.5 px-2 pe-7 bg-slate-800 border-slate-700 text-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
         <option value="">All Reports</option>
         <option value="incident">Incidents</option>
         <option value="annoyance">Annoyances</option>
       </select>
-      <select id="filter-type" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
+      <select id="filter-type" class="shrink-0 py-1.5 px-2 pe-7 bg-slate-800 border-slate-700 text-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
         <option value="">All Types</option>
         <option value="intersection">Intersection</option>
         <option value="same_direction">Sideswipe / Rear End</option>
@@ -93,15 +93,15 @@
         <option value="road_rage">Road Rage</option>
         <option value="other">Other</option>
       </select>
-      <select id="filter-scariness" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
+      <select id="filter-scariness" class="shrink-0 py-1.5 px-2 pe-7 bg-slate-800 border-slate-700 text-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
         <option value="">All Scariness</option>
         <option value="not_scary">Not Scary</option>
         <option value="a_bit_scary">A Bit Scary</option>
         <option value="fairly_scary">Fairly Scary</option>
         <option value="very_scary">Very Scary</option>
       </select>
-      <button id="filter-reset" class="shrink-0 py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-50 whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none">Reset</button>
-      <span id="incident-count" class="shrink-0 ml-auto text-[11px] font-semibold text-gray-500 whitespace-nowrap">0</span>
+      <button id="filter-reset" class="shrink-0 py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none">Reset</button>
+      <span id="incident-count" class="shrink-0 ml-auto text-[11px] font-semibold text-slate-300 whitespace-nowrap">0</span>
     </div>
   </div>
 
@@ -118,9 +118,14 @@
 
   <!-- Incident Report Panel -->
   <div id="incident-panel" class="incident-panel">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
-      <h2 class="text-lg font-bold text-gray-800">Report Incident</h2>
-      <button id="panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-all">
+    <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="size-7 rounded bg-red-500 flex items-center justify-center">
+          <i class="fa-solid fa-triangle-exclamation text-white text-xs"></i>
+        </div>
+        <h2 class="text-sm font-bold text-white">Report Incident</h2>
+      </div>
+      <button id="panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
         <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
@@ -356,7 +361,7 @@
         <p id="char-count" class="text-[11px] text-gray-400 text-right mt-1">0 / 1000</p>
       </div>
     </div>
-    <div class="px-5 py-4 border-t border-gray-200 shrink-0">
+    <div class="px-5 py-3.5 bg-slate-50 border-t border-gray-200 shrink-0">
       <button id="incident-submit" disabled class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none transition-colors">
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
         Submit Report
@@ -366,9 +371,14 @@
 
   <!-- Annoyance Report Panel -->
   <div id="annoyance-panel" class="incident-panel">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-amber-200 bg-amber-50 shrink-0">
-      <h2 class="text-lg font-bold text-amber-900"><i class="fa-solid fa-face-rolling-eyes mr-1"></i> Report Annoying</h2>
-      <button id="annoyance-panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-100 transition-all">
+    <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="size-7 rounded bg-amber-500 flex items-center justify-center">
+          <i class="fa-solid fa-face-rolling-eyes text-white text-xs"></i>
+        </div>
+        <h2 class="text-sm font-bold text-white">Report Annoying</h2>
+      </div>
+      <button id="annoyance-panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
         <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
@@ -481,7 +491,7 @@
         <p id="annoyance-char-count" class="text-[11px] text-gray-400 text-right mt-1">0 / 1000</p>
       </div>
     </div>
-    <div class="px-5 py-4 border-t border-gray-200 shrink-0">
+    <div class="px-5 py-3.5 bg-slate-50 border-t border-gray-200 shrink-0">
       <button id="annoyance-submit" disabled class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-amber-500 text-white hover:bg-amber-600 focus:outline-none focus:bg-amber-600 disabled:opacity-50 disabled:pointer-events-none transition-colors">
         <i class="fa-solid fa-face-rolling-eyes"></i> Submit Report
       </button>
@@ -491,13 +501,13 @@
   <!-- Login Modal (Preline hs-overlay) -->
   <div id="login-modal" class="hs-overlay hidden size-full fixed top-0 start-0 z-[2000] overflow-x-hidden overflow-y-auto" role="dialog" tabindex="-1">
     <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
-      <div class="w-full flex flex-col bg-white border border-gray-200 shadow-2xl rounded-2xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-200">
-          <div class="text-center flex-1">
-            <h3 class="text-lg font-bold text-gray-800">Sign In</h3>
-            <p class="text-sm text-gray-500">Sign in to report cycling incidents</p>
+      <div class="w-full flex flex-col bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 bg-slate-900">
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-white">Sign In</h3>
+            <p class="text-[11px] text-slate-400">Sign in to report cycling incidents</p>
           </div>
-          <button type="button" class="shrink-0 size-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-all" onclick="hideLoginModal()">
+          <button type="button" class="shrink-0 size-8 inline-flex justify-center items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all" onclick="hideLoginModal()">
             <span class="sr-only">Close</span>
             <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
