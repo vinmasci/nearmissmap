@@ -10,43 +10,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: { extend: {} },
-      plugins: [],
+      plugins: [
+        function({ addVariant }) {
+          addVariant('hs-overlay-open', '.open&, .open &');
+        }
+      ],
     }
   </script>
-  <style type="text/tailwindcss">
-    @layer base {
-      [type='text'], [type='email'], [type='url'], [type='password'], [type='number'], [type='date'], [type='time'],
-      [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='week'], select, textarea {
-        appearance: none;
-        background-color: #fff;
-        border-color: #e5e7eb;
-        border-width: 1px;
-        border-radius: 0.5rem;
-        padding: 0.625rem 0.75rem;
-        font-size: 0.8125rem;
-        line-height: 1.5;
-      }
-      [type='text']:focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus,
-      [type='date']:focus, [type='time']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus,
-      [type='tel']:focus, [type='week']:focus, select:focus, textarea:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-      }
-      [type='checkbox'] {
-        appearance: none;
-        width: 1rem; height: 1rem;
-        border: 1px solid #d1d5db; border-radius: 0.25rem;
-        background-color: #fff; cursor: pointer;
-      }
-      [type='checkbox']:checked {
-        background-color: #2563eb; border-color: #2563eb;
-        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
-        background-size: 100% 100%; background-position: center; background-repeat: no-repeat;
-      }
-    }
-  </style>
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css" rel="stylesheet" />
   <!-- Font Awesome -->
@@ -61,24 +33,24 @@
 </head>
 <body class="font-['Inter',sans-serif]">
   <!-- Navbar -->
-  <nav id="nmm-navbar" class="sticky top-0 z-[9999] border-b border-gray-200 bg-white shadow-sm" style="font-family: 'DM Sans', sans-serif;">
-    <div class="px-4">
+  <header id="nmm-navbar" class="sticky top-0 z-[9999] flex flex-wrap md:justify-start md:flex-nowrap w-full bg-white border-b border-gray-200 shadow-sm" style="font-family: 'DM Sans', sans-serif;">
+    <nav class="w-full mx-auto px-4">
       <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-lg bg-red-500 flex items-center justify-center">
+        <div class="flex items-center gap-x-2.5">
+          <div class="size-9 rounded-lg bg-red-600 flex items-center justify-center">
             <i class="fa-solid fa-triangle-exclamation text-white text-lg"></i>
           </div>
           <div class="leading-tight">
-            <span class="text-lg font-bold text-gray-900">Near Miss Map</span>
+            <span class="text-lg font-bold text-gray-800">Near Miss Map</span>
             <span class="block text-[11px] text-gray-400 -mt-0.5">Report cycling incidents & annoyances</span>
           </div>
         </div>
-        <a href="https://vicbug.app" target="_blank" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        <a href="https://vicbug.app" target="_blank" class="text-xs text-gray-400 hover:text-blue-600 transition-colors">
           Powered by VicBUG
         </a>
       </div>
-    </div>
-  </nav>
+    </nav>
+  </header>
 
   <!-- Map -->
   <div id="map"></div>
@@ -100,12 +72,12 @@
     </div>
     <!-- Filter row -->
     <div id="filter-bar" class="flex flex-nowrap items-center gap-1.5 bg-white/95 backdrop-blur-sm py-1.5 px-2.5 rounded-xl shadow-md overflow-x-auto text-xs md:py-2 md:px-3 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <select id="filter-report-type" class="shrink-0 py-1.5 px-2 pe-6 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 bg-white">
+      <select id="filter-report-type" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
         <option value="">All Reports</option>
         <option value="incident">Incidents</option>
         <option value="annoyance">Annoyances</option>
       </select>
-      <select id="filter-type" class="shrink-0 py-1.5 px-2 pe-6 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 bg-white">
+      <select id="filter-type" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
         <option value="">All Types</option>
         <option value="intersection">Intersection</option>
         <option value="same_direction">Sideswipe / Rear End</option>
@@ -121,14 +93,14 @@
         <option value="road_rage">Road Rage</option>
         <option value="other">Other</option>
       </select>
-      <select id="filter-scariness" class="shrink-0 py-1.5 px-2 pe-6 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 bg-white">
+      <select id="filter-scariness" class="shrink-0 py-1.5 px-2 pe-7 border-gray-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none bg-white">
         <option value="">All Scariness</option>
         <option value="not_scary">Not Scary</option>
         <option value="a_bit_scary">A Bit Scary</option>
         <option value="fairly_scary">Fairly Scary</option>
         <option value="very_scary">Very Scary</option>
       </select>
-      <button id="filter-reset" class="shrink-0 py-1.5 px-2.5 inline-flex items-center text-xs font-medium rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 whitespace-nowrap">Reset</button>
+      <button id="filter-reset" class="shrink-0 py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-50 whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none">Reset</button>
       <span id="incident-count" class="shrink-0 ml-auto text-[11px] font-semibold text-gray-500 whitespace-nowrap">0</span>
     </div>
   </div>
@@ -136,10 +108,10 @@
 
   <!-- Report buttons (floating) -->
   <div id="report-buttons" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[160] flex gap-2 max-md:bottom-6">
-    <button id="report-btn" data-mode="incident" class="inline-flex items-center gap-2 py-3 px-5 bg-red-500 text-white font-semibold text-[14px] rounded-full shadow-lg shadow-red-500/40 hover:bg-red-600 transition-all">
+    <button id="report-btn" data-mode="incident" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-transparent bg-red-600 text-white shadow-lg shadow-red-600/40 hover:bg-red-700 focus:outline-none focus:bg-red-700 transition-all">
       <i class="fa-solid fa-triangle-exclamation"></i> Report Incident
     </button>
-    <button id="report-annoying-btn" data-mode="annoyance" class="inline-flex items-center gap-2 py-3 px-5 bg-amber-500 text-white font-semibold text-[14px] rounded-full shadow-lg shadow-amber-500/40 hover:bg-amber-600 transition-all">
+    <button id="report-annoying-btn" data-mode="annoyance" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-transparent bg-amber-500 text-white shadow-lg shadow-amber-500/40 hover:bg-amber-600 focus:outline-none focus:bg-amber-600 transition-all">
       <i class="fa-solid fa-face-rolling-eyes"></i> Report Annoying
     </button>
   </div>
@@ -147,8 +119,10 @@
   <!-- Incident Report Panel -->
   <div id="incident-panel" class="incident-panel">
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
-      <h2 class="text-lg font-bold text-gray-900">Report Incident</h2>
-      <button id="panel-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      <h2 class="text-lg font-bold text-gray-800">Report Incident</h2>
+      <button id="panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-all">
+        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
     </div>
     <div class="flex-1 overflow-y-auto p-5 space-y-5">
       <!-- Location -->
@@ -278,8 +252,8 @@
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">When did it happen?</label>
         <div class="grid grid-cols-2 gap-2">
-          <input type="date" id="incident-date" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
-          <input type="time" id="incident-time" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+          <input type="date" id="incident-date" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <input type="time" id="incident-time" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
         </div>
       </div>
 
@@ -289,14 +263,14 @@
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Conditions</label>
         <div class="grid grid-cols-2 gap-2 mb-2">
-          <select id="incident-lighting" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+          <select id="incident-lighting" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
             <option value="">Lighting...</option>
             <option value="daylight">Daylight</option>
             <option value="dawn_dusk">Dawn/Dusk</option>
             <option value="dark_lit">Dark (street lit)</option>
             <option value="dark_unlit">Dark (unlit)</option>
           </select>
-          <select id="incident-weather" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+          <select id="incident-weather" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
             <option value="">Weather...</option>
             <option value="clear">Clear</option>
             <option value="cloudy">Cloudy</option>
@@ -305,7 +279,7 @@
             <option value="wind">Strong Wind</option>
           </select>
         </div>
-        <select id="incident-surface" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+        <select id="incident-surface" class="py-2.5 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
           <option value="">Road Surface...</option>
           <option value="dry">Dry</option>
           <option value="wet">Wet</option>
@@ -331,7 +305,7 @@
           </div>
           <div>
             <label class="block text-[11px] text-gray-400 mb-1">Rider age range</label>
-            <select id="rider-age" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+            <select id="rider-age" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
               <option value="">Select...</option>
               <option value="under_18">Under 18</option>
               <option value="18_25">18–25</option>
@@ -345,7 +319,7 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-[11px] text-gray-400 mb-1">Ride type</label>
-              <select id="ride-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+              <select id="ride-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
                 <option value="">Select...</option>
                 <option value="commute">Commute</option>
                 <option value="road_ride">Road Ride</option>
@@ -358,7 +332,7 @@
             </div>
             <div>
               <label class="block text-[11px] text-gray-400 mb-1">Bike type</label>
-              <select id="bike-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+              <select id="bike-type" class="py-2 px-3 pe-7 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
                 <option value="">Select...</option>
                 <option value="road">Road Bike</option>
                 <option value="mountain">Mountain Bike</option>
@@ -383,8 +357,8 @@
       </div>
     </div>
     <div class="px-5 py-4 border-t border-gray-200 shrink-0">
-      <button id="incident-submit" disabled class="w-full py-3 inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
-        <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <button id="incident-submit" disabled class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none transition-colors">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
         Submit Report
       </button>
     </div>
@@ -394,7 +368,9 @@
   <div id="annoyance-panel" class="incident-panel">
     <div class="flex items-center justify-between px-5 py-4 border-b border-amber-200 bg-amber-50 shrink-0">
       <h2 class="text-lg font-bold text-amber-900"><i class="fa-solid fa-face-rolling-eyes mr-1"></i> Report Annoying</h2>
-      <button id="annoyance-panel-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      <button id="annoyance-panel-close" class="size-8 inline-flex justify-center items-center rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-100 transition-all">
+        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
     </div>
     <div class="flex-1 overflow-y-auto p-5 space-y-5">
       <!-- Location -->
@@ -491,8 +467,8 @@
       <div>
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">When did you notice it?</label>
         <div class="grid grid-cols-2 gap-2">
-          <input type="date" id="annoyance-date" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
-          <input type="time" id="annoyance-time" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500">
+          <input type="date" id="annoyance-date" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+          <input type="time" id="annoyance-time" class="py-2.5 px-3 block w-full border-gray-200 rounded-lg text-[13px] focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
         </div>
       </div>
 
@@ -506,50 +482,54 @@
       </div>
     </div>
     <div class="px-5 py-4 border-t border-gray-200 shrink-0">
-      <button id="annoyance-submit" disabled class="w-full py-3 inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+      <button id="annoyance-submit" disabled class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-amber-500 text-white hover:bg-amber-600 focus:outline-none focus:bg-amber-600 disabled:opacity-50 disabled:pointer-events-none transition-colors">
         <i class="fa-solid fa-face-rolling-eyes"></i> Submit Report
       </button>
     </div>
   </div>
 
-  <!-- Login Modal -->
-  <div id="login-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
-    <div class="relative bg-white rounded-2xl p-8 max-w-[400px] w-[90%] shadow-2xl">
-      <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none" onclick="hideLoginModal()">&times;</button>
-      <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-        <p class="text-gray-500 text-sm">Sign in to report cycling incidents</p>
-      </div>
-
-      <div id="login-options" class="space-y-3">
-        <button onclick="signInWithApple()" class="w-full py-3.5 px-5 inline-flex items-center justify-center gap-3 text-[15px] font-medium text-white bg-black rounded-xl hover:bg-gray-900 transition-colors">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-          Continue with Apple
-        </button>
-
-        <button onclick="signInWithGoogle()" class="w-full py-3.5 px-5 inline-flex items-center justify-center gap-3 text-[15px] font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continue with Google
-        </button>
-
-        <div class="flex items-center my-5 text-gray-400 text-[13px]">
-          <div class="flex-1 h-px bg-gray-200"></div>
-          <span class="px-3">or</span>
-          <div class="flex-1 h-px bg-gray-200"></div>
+  <!-- Login Modal (Preline hs-overlay) -->
+  <div id="login-modal" class="hs-overlay hidden size-full fixed top-0 start-0 z-[2000] overflow-x-hidden overflow-y-auto" role="dialog" tabindex="-1">
+    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-500 mt-0 opacity-0 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+      <div class="w-full flex flex-col bg-white border border-gray-200 shadow-2xl rounded-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-200">
+          <div class="text-center flex-1">
+            <h3 class="text-lg font-bold text-gray-800">Sign In</h3>
+            <p class="text-sm text-gray-500">Sign in to report cycling incidents</p>
+          </div>
+          <button type="button" class="shrink-0 size-8 inline-flex justify-center items-center rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-all" onclick="hideLoginModal()">
+            <span class="sr-only">Close</span>
+            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
         </div>
+        <div class="p-6">
+          <div id="login-options" class="space-y-3">
+            <button onclick="signInWithApple()" class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-800 text-white hover:bg-gray-900 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Continue with Apple
+            </button>
 
-        <button onclick="showEmailForm()" class="w-full py-3.5 px-5 inline-flex items-center justify-center gap-3 text-[15px] font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Continue with Email
-        </button>
-      </div>
+            <button onclick="signInWithGoogle()" class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continue with Google
+            </button>
 
-      <div id="email-form" class="hidden space-y-3">
-        <input type="email" id="login-email" placeholder="Email address" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-purple-500 focus:ring-purple-500">
-        <input type="password" id="login-password" placeholder="Password" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-purple-500 focus:ring-purple-500">
-        <button onclick="signInWithEmail()" class="w-full py-3.5 px-5 inline-flex items-center justify-center text-[15px] font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors">Sign In</button>
-        <button onclick="showLoginOptions()" class="text-purple-600 text-[13px] hover:underline mt-2">&larr; Back to options</button>
-        <p id="login-error" class="text-red-500 text-[13px] text-center"></p>
+            <div class="py-3 flex items-center text-xs text-gray-400 uppercase before:flex-1 before:border-t before:border-gray-200 before:me-6 after:flex-1 after:border-t after:border-gray-200 after:ms-6">or</div>
+
+            <button onclick="showEmailForm()" class="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Continue with Email
+            </button>
+          </div>
+
+          <div id="email-form" class="hidden space-y-3">
+            <input type="email" id="login-email" placeholder="Email address" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+            <input type="password" id="login-password" placeholder="Password" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">
+            <button onclick="signInWithEmail()" class="w-full py-3 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">Sign In</button>
+            <button onclick="showLoginOptions()" class="text-blue-600 text-sm hover:underline mt-2">&larr; Back to options</button>
+            <p id="login-error" class="text-red-500 text-sm text-center"></p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

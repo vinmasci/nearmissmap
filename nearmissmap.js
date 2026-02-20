@@ -860,23 +860,21 @@ function addMapLayers() {
   map.on('mouseenter', 'annoyance-points', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'annoyance-points', () => { map.getCanvas().style.cursor = ''; });
 
-  // Route hover tooltip
-  const routePopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-  map.on('mouseenter', 'routes-line', (e) => {
+  // Route click popup
+  const routePopup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, offset: 10 });
+  map.on('mouseenter', 'routes-line', () => {
+    if (!isPlacingMarker) map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'routes-line', () => {
+    if (!isPlacingMarker) map.getCanvas().style.cursor = '';
+  });
+  map.on('click', 'routes-line', (e) => {
     if (isPlacingMarker) return;
-    map.getCanvas().style.cursor = 'pointer';
     const p = e.features[0].properties;
     const km = p.total_length_m ? (p.total_length_m / 1000).toFixed(1) : '?';
     routePopup.setLngLat(e.lngLat)
       .setHTML(`<strong>${p.name}</strong><br>${p.category ? p.category.replace('_',' ') : ''} &middot; ${km} km`)
       .addTo(map);
-  });
-  map.on('mousemove', 'routes-line', (e) => {
-    routePopup.setLngLat(e.lngLat);
-  });
-  map.on('mouseleave', 'routes-line', () => {
-    if (!isPlacingMarker) map.getCanvas().style.cursor = '';
-    routePopup.remove();
   });
 }
 
@@ -1709,14 +1707,26 @@ if (auth) {
 }
 
 function showLoginModal() {
-  document.getElementById('login-modal').classList.remove('hidden');
   document.getElementById('login-options').classList.remove('hidden');
   document.getElementById('email-form').classList.add('hidden');
   document.getElementById('login-error').textContent = '';
+  const el = document.getElementById('login-modal');
+  if (typeof HSOverlay !== 'undefined') {
+    HSOverlay.open(el);
+  } else {
+    el.classList.add('open');
+    el.classList.remove('hidden');
+  }
 }
 
 function hideLoginModal() {
-  document.getElementById('login-modal').classList.add('hidden');
+  const el = document.getElementById('login-modal');
+  if (typeof HSOverlay !== 'undefined') {
+    HSOverlay.close(el);
+  } else {
+    el.classList.remove('open');
+    el.classList.add('hidden');
+  }
 }
 
 function showEmailForm() {
