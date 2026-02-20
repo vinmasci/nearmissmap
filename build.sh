@@ -1,8 +1,17 @@
 #!/bin/bash
-# Replace placeholders in config.js with Vercel environment variables
-sed -i.bak \
-  -e "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|g" \
-  -e "s|__GOOGLE_PLACES_KEY__|${GOOGLE_PLACES_KEY}|g" \
-  -e "s|__FIREBASE_API_KEY__|${FIREBASE_API_KEY}|g" \
-  config.js
-rm -f config.js.bak
+# Generate config.js from Vercel environment variables
+cat > config.js << JSEOF
+window.APP_CONFIG = {
+  MAPBOX_TOKEN: '${MAPBOX_TOKEN}',
+  GOOGLE_PLACES_KEY: '${GOOGLE_PLACES_KEY}',
+  FIREBASE_CONFIG: {
+    apiKey: '${FIREBASE_API_KEY}',
+    authDomain: 'cyaroutes.firebaseapp.com',
+    projectId: 'cyaroutes',
+    storageBucket: 'cyaroutes.firebasestorage.app',
+    messagingSenderId: '601003510442',
+    appId: '1:601003510442:web:a91daf9016922656a89ed3'
+  }
+};
+JSEOF
+echo "config.js generated"
