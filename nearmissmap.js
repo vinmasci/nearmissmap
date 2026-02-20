@@ -564,6 +564,18 @@ function addMapLayers() {
     }
   });
 
+  // Invisible wider hit area for easier route clicking
+  map.addLayer({
+    id: 'routes-hit',
+    type: 'line',
+    source: 'cycling-routes',
+    paint: {
+      'line-color': 'transparent',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 4, 10, 10, 16, 14, 20],
+      'line-opacity': 0
+    }
+  });
+
   // Route labels at high zoom
   map.addLayer({
     id: 'routes-labels',
@@ -776,22 +788,32 @@ function addMapLayers() {
       } catch (e) {}
     }
 
+    const reporterName = p.reporterName || 'Anonymous';
+
     const html = `
-      <div class="max-w-[280px] font-['Inter',sans-serif]">
-        <h3 class="text-sm font-semibold text-gray-900 mb-1 inline-flex items-center gap-1.5">${TYPE_ICONS[p.incidentType] || ''} ${typeLabel}</h3>
-        <p class="text-xs text-gray-500 mb-1.5">${p.roadName || ''} ${dateStr ? '&middot; ' + dateStr : ''}</p>
-        <p class="text-[13px] text-gray-700 mb-2">${escapeHtml(p.description || '')}</p>
-        <div class="flex gap-1.5 flex-wrap">
+      <div class="max-w-[300px] font-['Inter',sans-serif]">
+        <div class="flex items-start gap-2 mb-2">
+          <div class="shrink-0 size-8 inline-flex items-center justify-center rounded-full bg-red-100 text-red-600 text-sm">${TYPE_ICONS[p.incidentType] || '<i class="fa-solid fa-triangle-exclamation"></i>'}</div>
+          <div class="grow">
+            <h3 class="text-sm font-semibold text-gray-800">${typeLabel}</h3>
+            <p class="text-[11px] text-gray-500">${p.roadName || 'Unknown road'} ${dateStr ? '&middot; ' + dateStr : ''}</p>
+          </div>
+        </div>
+        <p class="text-[13px] text-gray-700 mb-2.5 leading-relaxed">${escapeHtml(p.description || '')}</p>
+        <div class="flex gap-1.5 flex-wrap mb-2">
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium ${scarinessStyles[p.scariness] || 'bg-gray-100 text-gray-700'}">${scarinessLabel}</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium ${contactStyle}">${contactLabel}</span>
           ${injuryLabel ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-red-100 text-red-700">${injuryLabel}</span>` : ''}
           ${p.otherParty && p.otherParty !== 'none' ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${formatParty(p.otherParty)}</span>` : ''}
         </div>
-        ${p.photoURL && p.photoURL !== '' ? `<div class="mt-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
+        ${p.photoURL && p.photoURL !== '' ? `<div class="mb-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
         ${infraHtml}
-        <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
-          <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
-          ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50">&#x1F5D1; Delete</button>` : ''}
+        <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
+          <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+          <div class="flex gap-1.5">
+            <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
+            ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -837,20 +859,30 @@ function addMapLayers() {
       } catch (e) {}
     }
 
+    const reporterName = p.reporterName || 'Anonymous';
+
     const html = `
-      <div class="max-w-[280px] font-['Inter',sans-serif]">
-        <h3 class="text-sm font-semibold text-gray-900 mb-1 inline-flex items-center gap-1.5">${ANNOYANCE_TYPE_ICONS[p.annoyanceType] || ''} ${typeLabel}</h3>
-        <p class="text-xs text-gray-500 mb-1.5">${p.roadName || ''}</p>
-        <p class="text-[13px] text-gray-700 mb-2">${escapeHtml(p.description || '')}</p>
-        <div class="flex gap-1.5 flex-wrap">
+      <div class="max-w-[300px] font-['Inter',sans-serif]">
+        <div class="flex items-start gap-2 mb-2">
+          <div class="shrink-0 size-8 inline-flex items-center justify-center rounded-full bg-amber-100 text-amber-600 text-sm">${ANNOYANCE_TYPE_ICONS[p.annoyanceType] || '<i class="fa-solid fa-circle-exclamation"></i>'}</div>
+          <div class="grow">
+            <h3 class="text-sm font-semibold text-gray-800">${typeLabel}</h3>
+            <p class="text-[11px] text-gray-500">${p.roadName || 'Unknown road'}</p>
+          </div>
+        </div>
+        <p class="text-[13px] text-gray-700 mb-2.5 leading-relaxed">${escapeHtml(p.description || '')}</p>
+        <div class="flex gap-1.5 flex-wrap mb-2">
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">Annoyance</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${ongoingLabel}</span>
         </div>
-        ${p.photoURL && p.photoURL !== '' ? `<div class="mt-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
+        ${p.photoURL && p.photoURL !== '' ? `<div class="mb-2"><img src="${escapeHtml(p.photoURL)}" class="max-h-32 rounded-lg border border-gray-200 cursor-pointer" onerror="this.parentElement.style.display='none'" onclick="window.open(this.src,'_blank')" /></div>` : ''}
         ${infraHtml}
-        <div class="flex gap-2 pt-1.5 mt-1.5 border-t border-gray-100">
-          <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50">&#x1F6A9; Flag</button>
-          ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50">&#x1F5D1; Delete</button>` : ''}
+        <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
+          <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+          <div class="flex gap-1.5">
+            <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
+            ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -869,18 +901,24 @@ function addMapLayers() {
 
   // Route click popup
   const routePopup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, offset: 10 });
-  map.on('mouseenter', 'routes-line', () => {
+  map.on('mouseenter', 'routes-hit', () => {
     if (!isPlacingMarker) map.getCanvas().style.cursor = 'pointer';
   });
-  map.on('mouseleave', 'routes-line', () => {
+  map.on('mouseleave', 'routes-hit', () => {
     if (!isPlacingMarker) map.getCanvas().style.cursor = '';
   });
-  map.on('click', 'routes-line', (e) => {
+  map.on('click', 'routes-hit', (e) => {
     if (isPlacingMarker) return;
     const p = e.features[0].properties;
-    const km = p.total_length_m ? (p.total_length_m / 1000).toFixed(1) : '?';
     routePopup.setLngLat(e.lngLat)
-      .setHTML(`<strong>${p.name}</strong><br>${p.category ? p.category.replace('_',' ') : ''} &middot; ${km} km`)
+      .setHTML(`
+        <div class="font-['Inter',sans-serif] px-1 py-0.5">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-route text-blue-500 text-sm"></i>
+            <span class="text-sm font-semibold text-gray-900">${p.name || 'Unnamed Route'}</span>
+          </div>
+        </div>
+      `)
       .addTo(map);
   });
 }
