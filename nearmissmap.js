@@ -624,7 +624,7 @@ function addMapLayers() {
       'line-opacity': 0.3
     },
     layout: { 'line-cap': 'round', 'line-join': 'round' }
-  }, 'report-clusters');
+  });
 
   // Bike lanes — dashed line
   map.addLayer({
@@ -640,7 +640,7 @@ function addMapLayers() {
       'line-dasharray': [2, 3]
     },
     layout: { 'line-cap': 'round', 'line-join': 'round' }
-  }, 'report-clusters');
+  });
 
   console.log('Cycling infrastructure source added (PMTiles, Australia-wide)');
 
