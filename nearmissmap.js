@@ -431,9 +431,8 @@ function generateMarkerImages() {
 // MAP INIT
 // ============================================
 
-// Register PMTiles protocol for cycling infrastructure vector tiles
-const pmtilesProtocol = new pmtiles.Protocol();
-mapboxgl.addProtocol('pmtiles', pmtilesProtocol.tile);
+// Register PMTiles custom source type for cycling infrastructure
+mapboxgl.Style.setSourceType(mapboxPmTiles.SOURCE_TYPE, mapboxPmTiles.PmTilesSource);
 
 map = new mapboxgl.Map({
   container: 'map',
@@ -606,9 +605,10 @@ function addMapLayers() {
   loadCyclingRoutes();
 
   // --- Cycling Infrastructure (PMTiles vector tiles — Australia-wide OSM data) ---
+  const pmtilesUrl = new URL('cycling-infra.pmtiles', window.location.href).toString();
   map.addSource('cycling-infra', {
-    type: 'vector',
-    url: 'pmtiles://cycling-infra.pmtiles'
+    type: 'pmtile-source',
+    url: pmtilesUrl
   });
 
   // Shared paths / bike paths — solid line
