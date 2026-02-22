@@ -1424,18 +1424,43 @@ descEl.addEventListener('input', () => {
   validateForm();
 });
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function validateForm() {
   const desc = descEl.value.trim();
   const riderAge = document.getElementById('rider-age');
   const rideType = document.getElementById('ride-type');
   const bikeType = document.getElementById('bike-type');
+
+  // Email validation for anonymous users
+  let emailValid = true;
+  if (!currentUser) {
+    const emailEl = document.getElementById('contact-email');
+    const emailError = document.getElementById('incident-email-error');
+    const emailVal = (emailEl.value || '').trim();
+    if (emailVal.length > 0 && !isValidEmail(emailVal)) {
+      emailValid = false;
+      if (emailError) emailError.classList.remove('hidden');
+    } else {
+      if (emailError) emailError.classList.add('hidden');
+    }
+    // Email is required for anonymous
+    if (emailVal.length === 0) emailValid = false;
+  }
+
   const valid = reportCoords && selectedType && selectedScariness && desc.length >= 20 &&
     selectedReporter &&
     (riderAge && riderAge.value) &&
     (rideType && rideType.value) &&
-    (bikeType && bikeType.value);
+    (bikeType && bikeType.value) &&
+    emailValid;
   document.getElementById('incident-submit').disabled = !valid;
 }
+
+// Re-validate when email changes (incident)
+document.getElementById('contact-email').addEventListener('input', validateForm);
 
 function resetForm() {
   selectedType = null;
@@ -1564,9 +1589,29 @@ annoyanceDescEl.addEventListener('input', () => {
 
 function validateAnnoyanceForm() {
   const desc = annoyanceDescEl.value.trim();
-  const valid = reportCoords && selectedAnnoyanceType && desc.length >= 20;
+
+  // Email validation for anonymous users
+  let emailValid = true;
+  if (!currentUser) {
+    const emailEl = document.getElementById('annoyance-contact-email');
+    const emailError = document.getElementById('annoyance-email-error');
+    const emailVal = (emailEl.value || '').trim();
+    if (emailVal.length > 0 && !isValidEmail(emailVal)) {
+      emailValid = false;
+      if (emailError) emailError.classList.remove('hidden');
+    } else {
+      if (emailError) emailError.classList.add('hidden');
+    }
+    // Email is required for anonymous
+    if (emailVal.length === 0) emailValid = false;
+  }
+
+  const valid = reportCoords && selectedAnnoyanceType && desc.length >= 20 && emailValid;
   document.getElementById('annoyance-submit').disabled = !valid;
 }
+
+// Re-validate when email changes (annoyance)
+document.getElementById('annoyance-contact-email').addEventListener('input', validateAnnoyanceForm);
 
 function resetAnnoyanceForm() {
   selectedAnnoyanceType = null;
@@ -1629,9 +1674,31 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     // Collect optional fields
     const annGender = document.getElementById('annoyance-gender').value || null;
     const annAge = document.getElementById('annoyance-age').value || null;
-    const annContactName = (document.getElementById('annoyance-contact-name').value || '').trim() || null;
-    const annContactEmail = (document.getElementById('annoyance-contact-email').value || '').trim() || null;
     const annContactConsent = document.getElementById('annoyance-contact-consent').checked;
+    const annMailingList = document.getElementById('annoyance-mailing-list').checked;
+    const isAnonToggled = document.getElementById('annoyance-anon-btn').classList.contains('selected');
+
+    // Determine contact info based on auth state
+    let annContactName, annContactEmail, displayName;
+    if (currentUser) {
+      annContactEmail = currentUser.email;
+      annContactName = currentUser.displayName || currentUser.email;
+      displayName = isAnonToggled ? 'Anonymous' : (currentUser.displayName || currentUser.email || 'Anonymous');
+    } else {
+      annContactName = (document.getElementById('annoyance-contact-name').value || '').trim() || null;
+      annContactEmail = (document.getElementById('annoyance-contact-email').value || '').trim();
+      displayName = isAnonToggled ? 'Anonymous' : (annContactName || 'Anonymous');
+    }
+
+    // Validate email for anonymous users
+    if (!currentUser && (!annContactEmail || !isValidEmail(annContactEmail))) {
+      showToast('Please enter a valid email address');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-face-rolling-eyes"></i> Submit Report';
+      return;
+    }
+
+    const isLoggedIn = !!currentUser;
 
     const annoyanceData = {
       geometry: {
@@ -1644,18 +1711,21 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
       description: description,
       dateTime: firebase.firestore.Timestamp.fromDate(dateTime),
       roadName: roadName,
-      reportedBy: currentUser ? currentUser.uid : 'anonymous',
-      reporterName: currentUser ? (currentUser.displayName || currentUser.email || 'Anonymous') : 'Anonymous',
+      reportedBy: isLoggedIn ? currentUser.uid : 'anonymous',
+      reporterName: displayName,
       reportedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      status: 'approved',
-      reportCount: 0
+      status: isLoggedIn ? 'approved' : 'pending_verification',
+      verified: isLoggedIn,
+      anonymous: isAnonToggled,
+      reportCount: 0,
+      contactEmail: annContactEmail
     };
 
     if (annGender) annoyanceData.riderGender = annGender;
     if (annAge) annoyanceData.riderAge = annAge;
     if (annContactName) annoyanceData.contactName = annContactName;
-    if (annContactEmail) annoyanceData.contactEmail = annContactEmail;
     if (annContactConsent) annoyanceData.contactConsent = true;
+    if (annMailingList) annoyanceData.mailingListOptIn = true;
     if (currentInfrastructure) annoyanceData.infrastructure = currentInfrastructure;
 
     const annDocRef = await db.collection('annoyances').add(annoyanceData);
@@ -1674,7 +1744,11 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
       placeholderMarker = null;
     }
     reportCoords = null;
-    showToast('Annoyance reported. Thank you!');
+    if (isLoggedIn) {
+      showToast('Annoyance reported. Thank you!');
+    } else {
+      showToast('Report submitted! Check your email for a verification link.');
+    }
 
   } catch (error) {
     console.error('Error submitting annoyance:', error);
@@ -1720,10 +1794,31 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
     const rideType = document.getElementById('ride-type').value || null;
     const bikeType = document.getElementById('bike-type').value || null;
 
-    // Contact fields
-    const contactName = (document.getElementById('contact-name').value || '').trim() || null;
-    const contactEmail = (document.getElementById('contact-email').value || '').trim() || null;
+    // Contact fields & auth-aware data
     const contactConsent = document.getElementById('contact-consent').checked;
+    const incMailingList = document.getElementById('incident-mailing-list').checked;
+    const isAnonToggled = document.getElementById('incident-anon-btn').classList.contains('selected');
+
+    let contactName, contactEmail, displayName;
+    if (currentUser) {
+      contactEmail = currentUser.email;
+      contactName = currentUser.displayName || currentUser.email;
+      displayName = isAnonToggled ? 'Anonymous' : (currentUser.displayName || currentUser.email || 'Anonymous');
+    } else {
+      contactName = (document.getElementById('contact-name').value || '').trim() || null;
+      contactEmail = (document.getElementById('contact-email').value || '').trim();
+      displayName = isAnonToggled ? 'Anonymous' : (contactName || 'Anonymous');
+    }
+
+    // Validate email for anonymous users
+    if (!currentUser && (!contactEmail || !isValidEmail(contactEmail))) {
+      showToast('Please enter a valid email address');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> Submit Report';
+      return;
+    }
+
+    const isLoggedIn = !!currentUser;
 
     const incidentData = {
       geometry: {
@@ -1744,11 +1839,14 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
         weather: document.getElementById('incident-weather').value || null,
         surface: document.getElementById('incident-surface').value || null
       },
-      reportedBy: currentUser ? currentUser.uid : 'anonymous',
-      reporterName: currentUser ? (currentUser.displayName || currentUser.email || 'Anonymous') : 'Anonymous',
+      reportedBy: isLoggedIn ? currentUser.uid : 'anonymous',
+      reporterName: displayName,
       reportedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      status: 'approved',
-      reportCount: 0
+      status: isLoggedIn ? 'approved' : 'pending_verification',
+      verified: isLoggedIn,
+      anonymous: isAnonToggled,
+      reportCount: 0,
+      contactEmail: contactEmail
     };
 
     // Add rider info
@@ -1760,8 +1858,8 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     // Add contact info
     if (contactName) incidentData.contactName = contactName;
-    if (contactEmail) incidentData.contactEmail = contactEmail;
     if (contactConsent) incidentData.contactConsent = true;
+    if (incMailingList) incidentData.mailingListOptIn = true;
 
     // Add auto-detected infrastructure
     if (currentInfrastructure) incidentData.infrastructure = currentInfrastructure;
@@ -1783,7 +1881,11 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
       placeholderMarker = null;
     }
     reportCoords = null;
-    showToast('Incident reported. Thank you!');
+    if (isLoggedIn) {
+      showToast('Incident reported. Thank you!');
+    } else {
+      showToast('Report submitted! Check your email for a verification link.');
+    }
 
   } catch (error) {
     console.error('Error submitting incident:', error);
@@ -1849,6 +1951,14 @@ if (auth) {
     const userInfo = document.getElementById('nav-user-info');
     const userName = document.getElementById('nav-user-name');
 
+    // Form panel elements
+    const incidentLoggedIn = document.getElementById('incident-logged-in-info');
+    const incidentLoggedInName = document.getElementById('incident-logged-in-name');
+    const incidentContactFields = document.getElementById('contact-fields');
+    const annoyanceLoggedIn = document.getElementById('annoyance-logged-in-info');
+    const annoyanceLoggedInName = document.getElementById('annoyance-logged-in-name');
+    const annoyanceContactFields = document.getElementById('annoyance-contact-fields');
+
     if (user) {
       try {
         const userDoc = await db.collection('users').doc(user.uid).get();
@@ -1863,11 +1973,30 @@ if (auth) {
       if (loginBtn) loginBtn.classList.add('hidden');
       if (userInfo) userInfo.classList.remove('hidden');
       if (userName) userName.textContent = user.displayName || user.email || 'User';
+
+      // Update form panels — show logged-in state
+      const displayStr = user.displayName || user.email || 'User';
+      if (incidentLoggedIn) incidentLoggedIn.classList.remove('hidden');
+      if (incidentLoggedInName) incidentLoggedInName.textContent = 'Signed in as ' + displayStr;
+      if (incidentContactFields) incidentContactFields.classList.add('hidden');
+      if (annoyanceLoggedIn) annoyanceLoggedIn.classList.remove('hidden');
+      if (annoyanceLoggedInName) annoyanceLoggedInName.textContent = 'Signed in as ' + displayStr;
+      if (annoyanceContactFields) annoyanceContactFields.classList.add('hidden');
     } else {
       // Show login button
       if (loginBtn) loginBtn.classList.remove('hidden');
       if (userInfo) userInfo.classList.add('hidden');
+
+      // Update form panels — show email-required state
+      if (incidentLoggedIn) incidentLoggedIn.classList.add('hidden');
+      if (incidentContactFields) incidentContactFields.classList.remove('hidden');
+      if (annoyanceLoggedIn) annoyanceLoggedIn.classList.add('hidden');
+      if (annoyanceContactFields) annoyanceContactFields.classList.remove('hidden');
     }
+
+    // Re-validate forms since email requirement changed
+    validateForm();
+    validateAnnoyanceForm();
   });
 }
 
@@ -2095,27 +2224,23 @@ window.signOut = async function() {
 // ============================================
 
 window.toggleAnon = function(btn, panel) {
-  const fieldsId = panel === 'incident' ? 'contact-fields' : 'annoyance-contact-fields';
-  const fields = document.getElementById(fieldsId);
   const isCurrentlySelected = btn.classList.contains('selected');
+  const nameId = panel === 'incident' ? 'contact-name' : 'annoyance-contact-name';
+  const nameEl = document.getElementById(nameId);
 
   if (isCurrentlySelected) {
-    // Deselect — show fields again
+    // Deselect — show name field again
     btn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
     btn.classList.add('text-gray-500', 'border-gray-200');
-    fields.classList.remove('hidden');
+    if (nameEl) nameEl.classList.remove('hidden');
   } else {
-    // Select — hide fields (post anonymously)
+    // Select — hide name only (email stays visible & required for anonymous)
     btn.classList.add('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
     btn.classList.remove('text-gray-500', 'border-gray-200');
-    fields.classList.add('hidden');
-    // Clear contact fields
-    const nameId = panel === 'incident' ? 'contact-name' : 'annoyance-contact-name';
-    const emailId = panel === 'incident' ? 'contact-email' : 'annoyance-contact-email';
-    const consentId = panel === 'incident' ? 'contact-consent' : 'annoyance-contact-consent';
-    document.getElementById(nameId).value = '';
-    document.getElementById(emailId).value = '';
-    document.getElementById(consentId).checked = false;
+    if (nameEl) {
+      nameEl.classList.add('hidden');
+      nameEl.value = '';
+    }
   }
 };
 
