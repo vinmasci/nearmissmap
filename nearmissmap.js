@@ -1672,10 +1672,10 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     const dateTime = new Date(`${dateVal}T${timeVal}`);
 
     // Collect optional fields
-    const annGender = document.getElementById('annoyance-gender').value || null;
-    const annAge = document.getElementById('annoyance-age').value || null;
+    const annGender = document.getElementById('annoyance-gender')?.value || null;
+    const annAge = document.getElementById('annoyance-age')?.value || null;
     const annContactConsent = document.getElementById('annoyance-contact-consent')?.checked || false;
-    const annMailingList = document.getElementById('annoyance-mailing-list').checked;
+    const annMailingList = document.getElementById('annoyance-mailing-list')?.checked || false;
     const isAnonToggled = document.getElementById('annoyance-anon-btn').classList.contains('selected');
 
     // Determine contact info based on auth state
