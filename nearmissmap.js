@@ -1674,7 +1674,7 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     // Collect optional fields
     const annGender = document.getElementById('annoyance-gender').value || null;
     const annAge = document.getElementById('annoyance-age').value || null;
-    const annContactConsent = document.getElementById('annoyance-contact-consent').checked;
+    const annContactConsent = document.getElementById('annoyance-contact-consent')?.checked || false;
     const annMailingList = document.getElementById('annoyance-mailing-list').checked;
     const isAnonToggled = document.getElementById('annoyance-anon-btn').classList.contains('selected');
 
@@ -1795,7 +1795,7 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
     const bikeType = document.getElementById('bike-type').value || null;
 
     // Contact fields & auth-aware data
-    const contactConsent = document.getElementById('contact-consent').checked;
+    const contactConsent = document.getElementById('contact-consent')?.checked || false;
     const incMailingList = document.getElementById('incident-mailing-list').checked;
     const isAnonToggled = document.getElementById('incident-anon-btn').classList.contains('selected');
 
