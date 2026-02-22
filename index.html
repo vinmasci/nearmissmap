@@ -127,10 +127,13 @@
 
   <!-- Report buttons (floating) -->
   <div id="report-buttons" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[160] flex gap-2 max-md:bottom-6">
-    <button id="report-btn" data-mode="incident" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-transparent bg-red-600 text-white shadow-lg shadow-red-600/40 hover:bg-red-700 focus:outline-none focus:bg-red-700 transition-all">
+    <button onclick="showAboutModal()" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-transparent bg-slate-700 text-white shadow-lg shadow-slate-700/40 hover:bg-slate-800 focus:outline-none focus:bg-slate-800 transition-all">
+      <i class="fa-solid fa-circle-info"></i> About
+    </button>
+    <button id="report-btn" data-mode="incident" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-transparent bg-red-600 text-white shadow-lg shadow-red-600/40 hover:bg-red-700 focus:outline-none focus:bg-red-700 transition-all">
       <i class="fa-solid fa-triangle-exclamation"></i> Report Incident
     </button>
-    <button id="report-annoying-btn" data-mode="annoyance" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-transparent bg-amber-500 text-white shadow-lg shadow-amber-500/40 hover:bg-amber-600 focus:outline-none focus:bg-amber-600 transition-all">
+    <button id="report-annoying-btn" data-mode="annoyance" class="py-3 px-5 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-transparent bg-amber-500 text-white shadow-lg shadow-amber-500/40 hover:bg-amber-600 focus:outline-none focus:bg-amber-600 transition-all">
       <i class="fa-solid fa-face-rolling-eyes"></i> Report Annoying
     </button>
   </div>
@@ -590,6 +593,45 @@
   </div>
 
   <!-- Login Modal (Preline hs-overlay) -->
+  <!-- About Modal -->
+  <div id="about-modal" class="hidden fixed inset-0 z-[2000] overflow-x-hidden overflow-y-auto" role="dialog" tabindex="-1" onclick="if(event.target===this)hideAboutModal()">
+    <div class="mt-7 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+      <div class="w-full flex flex-col bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 bg-slate-900">
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-white">About Near Miss Map</h3>
+            <p class="text-[11px] text-slate-400">Why this project exists</p>
+          </div>
+          <button type="button" class="shrink-0 size-8 inline-flex justify-center items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all" onclick="hideAboutModal()">
+            <span class="sr-only">Close</span>
+            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="p-5 space-y-4 text-sm text-gray-700 leading-relaxed max-h-[70vh] overflow-y-auto">
+          <p class="text-base font-semibold text-gray-900">Cycling near misses are almost never reported.</p>
+          <p>Every day, cyclists experience dangerous close passes, left hooks, dooring incidents and aggressive driving &mdash; yet almost none of these events make it into official road safety data. Cyclists brush them off and ride on. The result is a massive blind spot in how we understand road safety.</p>
+          <div class="bg-red-50 border border-red-100 rounded-lg p-3.5 space-y-2">
+            <p class="font-semibold text-red-800"><i class="fa-solid fa-chart-line mr-1.5"></i> The research is clear:</p>
+            <ul class="space-y-1.5 text-red-900/80 text-[13px]">
+              <li>&bull; The UK Near Miss Project found cyclists experience a frightening or annoying incident <strong>every 5.6 miles</strong> on average &mdash; with &ldquo;very scary&rdquo; incidents being a <strong>weekly occurrence</strong> for regular riders.</li>
+              <li>&bull; Over <strong>80%</strong> of near misses were caused by a cyclist&rsquo;s way being blocked, a dangerous pass, or a vehicle pulling across their path.</li>
+              <li>&bull; <strong>83%</strong> of cyclists said their near miss could have been prevented by better road conditions or different driver behaviour.</li>
+              <li>&bull; In Australia, hospital data shows <strong>8,163 cyclists were hospitalised</strong> in a single year (2021) &mdash; but this only counts those who ended up in hospital. The near misses that preceded them were never counted.</li>
+            </ul>
+          </div>
+          <p><strong>This map exists to fill that gap.</strong> By crowdsourcing reports of near misses, dangerous intersections, poor infrastructure and everyday annoyances, we can build a picture of cycling safety that official statistics completely miss.</p>
+          <p>The data collected here can help councils, transport planners and advocacy groups push for evidence-based improvements where they&rsquo;re needed most.</p>
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 text-[12px] text-gray-500 space-y-1.5">
+            <p><strong>Sources:</strong></p>
+            <p>Aldred, R. &amp; Crosweller, S. (2015). <em>Investigating the rates and impacts of near misses and related incidents among UK cyclists.</em> Journal of Transport &amp; Health.</p>
+            <p>Aldred, R. (2016). <em>Cycling near misses: Their frequency, impact, and prevention.</em> Transportation Research Part A.</p>
+            <p>National Road Safety Data Hub, Australia (2021). <em>Road crashes involving cyclists.</em></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="login-modal" class="hidden fixed inset-0 z-[2000] overflow-x-hidden overflow-y-auto" role="dialog" tabindex="-1">
     <div class="mt-7 sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
       <div class="w-full flex flex-col bg-white shadow-2xl rounded-2xl overflow-hidden">

@@ -1871,6 +1871,25 @@ if (auth) {
   });
 }
 
+window.showAboutModal = function() {
+  document.getElementById('about-modal').classList.remove('hidden');
+  let backdrop = document.getElementById('about-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'about-backdrop';
+    backdrop.className = 'fixed inset-0 z-[1999] bg-black/50';
+    backdrop.addEventListener('click', window.hideAboutModal);
+    document.body.appendChild(backdrop);
+  }
+  backdrop.classList.remove('hidden');
+};
+
+window.hideAboutModal = function() {
+  document.getElementById('about-modal').classList.add('hidden');
+  const backdrop = document.getElementById('about-backdrop');
+  if (backdrop) backdrop.classList.add('hidden');
+};
+
 window.showLoginModal = function() {
   document.getElementById('login-options').classList.remove('hidden');
   document.getElementById('email-form').classList.add('hidden');
