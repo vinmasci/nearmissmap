@@ -37,6 +37,11 @@ let incidentsData = { type: 'FeatureCollection', features: [] };
 let annoyancesData = { type: 'FeatureCollection', features: [] };
 let reportMode = 'incident'; // 'incident' or 'annoyance'
 
+// Direction handle state
+let riderBearing = null;
+let directionHandle = null;
+let directionSet = false;
+
 // Form state
 let selectedTypes = [];
 let selectedScariness = null;
@@ -644,6 +649,24 @@ function addMapLayers() {
 
   console.log('Cycling infrastructure source added (PMTiles, Australia-wide)');
 
+  // --- Direction line (dashed line from marker to direction handle) ---
+  map.addSource('direction-line', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] }
+  });
+  map.addLayer({
+    id: 'direction-line-layer',
+    type: 'line',
+    source: 'direction-line',
+    paint: {
+      'line-color': '#3b82f6',
+      'line-width': 2,
+      'line-dasharray': [3, 3],
+      'line-opacity': 0.7
+    },
+    layout: { 'line-cap': 'round' }
+  });
+
   // --- 3. Combined Reports Source (incidents + annoyances clustered together) ---
   map.addSource('reports', {
     type: 'geojson',
@@ -842,6 +865,7 @@ function addMapLayers() {
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium ${contactStyle}">${contactLabel}</span>
           ${injuryLabel ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-red-100 text-red-700">${injuryLabel}</span>` : ''}
           ${p.otherParty && p.otherParty !== 'none' ? `<span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${formatParty(p.otherParty)}</span>` : ''}
+          ${p.riderBearing != null && p.riderBearing !== 'null' ? `<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700"><i class="fa-solid fa-location-arrow text-[9px]" style="transform:rotate(${(parseInt(p.riderBearing) - 45)}deg)"></i> ${(() => { const b = parseInt(p.riderBearing); const dirs = ['N','NE','E','SE','S','SW','W','NW']; return dirs[Math.round(b/45)%8] + ' (' + b + '°)'; })()}</span>` : ''}
         </div>
         ${buildPhotoHtml(p)}
         ${infraHtml}
@@ -912,6 +936,7 @@ function addMapLayers() {
         <div class="flex gap-1.5 flex-wrap mb-2">
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">Annoyance</span>
           <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">${ongoingLabel}</span>
+          ${p.riderBearing != null && p.riderBearing !== 'null' ? `<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700"><i class="fa-solid fa-location-arrow text-[9px]" style="transform:rotate(${(parseInt(p.riderBearing) - 45)}deg)"></i> ${(() => { const b = parseInt(p.riderBearing); const dirs = ['N','NE','E','SE','S','SW','W','NW']; return dirs[Math.round(b/45)%8] + ' (' + b + '°)'; })()}</span>` : ''}
         </div>
         ${buildPhotoHtml(p)}
         ${infraHtml}
@@ -1018,7 +1043,8 @@ function loadIncidents() {
           photoURL: d.photoURL || '',
           photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
           reporterName: d.reporterName || 'Anonymous',
-          infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
+          infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : '',
+          riderBearing: d.riderBearing != null ? d.riderBearing : null
         }
       });
     });
@@ -1066,7 +1092,8 @@ function loadAnnoyances() {
           photoURL: d.photoURL || '',
           photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
           reporterName: d.reporterName || 'Anonymous',
-          infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : ''
+          infrastructure: d.infrastructure ? JSON.stringify(d.infrastructure) : '',
+          riderBearing: d.riderBearing != null ? d.riderBearing : null
         }
       });
     });
@@ -1283,6 +1310,124 @@ document.getElementById('report-annoying-btn').addEventListener('click', () => {
   startPlacingMarker();
 });
 
+// ============================================
+// DIRECTION HANDLE (rider bearing)
+// ============================================
+
+function calculateBearing(fromLngLat, toLngLat) {
+  const toRad = Math.PI / 180;
+  const lat1 = fromLngLat[1] * toRad;
+  const lat2 = toLngLat[1] * toRad;
+  const dLng = (toLngLat[0] - fromLngLat[0]) * toRad;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  let bearing = Math.atan2(y, x) * (180 / Math.PI);
+  return (bearing + 360) % 360;
+}
+
+function bearingToCompass(bearing) {
+  const dirs = ['North', 'NE', 'East', 'SE', 'South', 'SW', 'West', 'NW'];
+  const idx = Math.round(bearing / 45) % 8;
+  return dirs[idx];
+}
+
+function updateBearingDisplay(bearing) {
+  const isAnnoyance = reportMode === 'annoyance';
+  const sectionId = isAnnoyance ? 'annoyance-bearing-section' : 'bearing-section';
+  const arrowId = isAnnoyance ? 'annoyance-bearing-arrow' : 'bearing-arrow';
+  const labelId = isAnnoyance ? 'annoyance-bearing-label' : 'bearing-label';
+  const section = document.getElementById(sectionId);
+  const arrow = document.getElementById(arrowId);
+  const label = document.getElementById(labelId);
+  if (section) section.classList.remove('hidden');
+  if (arrow) arrow.style.transform = `rotate(${bearing - 45}deg)`;
+  if (label) label.textContent = `${bearingToCompass(bearing)} (${Math.round(bearing)}°)`;
+}
+
+function hideBearingDisplay() {
+  document.getElementById('bearing-section')?.classList.add('hidden');
+  document.getElementById('annoyance-bearing-section')?.classList.add('hidden');
+}
+
+function updateDirectionLine(fromLngLat, toLngLat) {
+  if (map.getSource('direction-line')) {
+    map.getSource('direction-line').setData({
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: [fromLngLat, toLngLat]
+        }
+      }]
+    });
+  }
+}
+
+function cleanupDirectionUI() {
+  if (directionHandle) {
+    directionHandle.remove();
+    directionHandle = null;
+  }
+  if (map.getSource('direction-line')) {
+    map.getSource('direction-line').setData({ type: 'FeatureCollection', features: [] });
+  }
+  riderBearing = null;
+  directionSet = false;
+  hideBearingDisplay();
+}
+
+window.clearBearing = function() {
+  riderBearing = null;
+  directionSet = false;
+  if (directionHandle) {
+    directionHandle.getElement().classList.remove('active');
+  }
+  hideBearingDisplay();
+  // Reset handle position above marker
+  if (placeholderMarker && directionHandle) {
+    const markerLngLat = placeholderMarker.getLngLat();
+    const markerPos = map.project([markerLngLat.lng, markerLngLat.lat]);
+    const handleLngLat = map.unproject([markerPos.x, markerPos.y - 50]);
+    directionHandle.setLngLat(handleLngLat);
+    updateDirectionLine([markerLngLat.lng, markerLngLat.lat], [handleLngLat.lng, handleLngLat.lat]);
+  }
+};
+
+function createDirectionHandle(markerLngLat) {
+  // Project marker to screen, offset 50px north, unproject back
+  const markerPos = map.project(markerLngLat);
+  const handleScreenPos = [markerPos.x, markerPos.y - 50];
+  const handleLngLat = map.unproject(handleScreenPos);
+
+  // Create the handle element
+  const el = document.createElement('div');
+  el.className = 'direction-handle';
+  el.innerHTML = '<i class="fa-solid fa-location-arrow" style="font-size:12px;transform:rotate(-45deg)"></i>';
+
+  directionHandle = new mapboxgl.Marker({ element: el, draggable: true })
+    .setLngLat(handleLngLat)
+    .addTo(map);
+
+  // Draw initial dashed line
+  updateDirectionLine(markerLngLat, [handleLngLat.lng, handleLngLat.lat]);
+
+  // On handle drag: compute bearing, update display
+  directionHandle.on('drag', () => {
+    const handlePos = directionHandle.getLngLat();
+    const markerPos = placeholderMarker.getLngLat();
+    const from = [markerPos.lng, markerPos.lat];
+    const to = [handlePos.lng, handlePos.lat];
+    riderBearing = Math.round(calculateBearing(from, to));
+    updateDirectionLine(from, to);
+    updateBearingDisplay(riderBearing);
+    if (!directionSet) {
+      directionSet = true;
+      el.classList.add('active');
+    }
+  });
+}
+
 function startPlacingMarker() {
   isPlacingMarker = true;
   map.getCanvas().style.cursor = 'crosshair';
@@ -1304,8 +1449,9 @@ map.on('click', async (e) => {
   const lngLat = [e.lngLat.lng, e.lngLat.lat];
   reportCoords = lngLat;
 
-  // Remove old marker
+  // Remove old marker and direction handle
   if (placeholderMarker) placeholderMarker.remove();
+  cleanupDirectionUI();
 
   // Create pulsing marker
   const el = document.createElement('div');
@@ -1314,13 +1460,28 @@ map.on('click', async (e) => {
     .setLngLat(lngLat)
     .addTo(map);
 
-  // Update coords on drag
+  // Update coords on drag — also update direction line
   placeholderMarker.on('dragend', () => {
     const pos = placeholderMarker.getLngLat();
     reportCoords = [pos.lng, pos.lat];
     updateLocationDisplay(reportCoords);
     fetchInfrastructure(reportCoords);
+    // Update direction line and bearing if handle exists
+    if (directionHandle) {
+      const handlePos = directionHandle.getLngLat();
+      const from = [pos.lng, pos.lat];
+      const to = [handlePos.lng, handlePos.lat];
+      updateDirectionLine(from, to);
+      if (directionSet) {
+        riderBearing = Math.round(calculateBearing(from, to));
+        updateBearingDisplay(riderBearing);
+      }
+    }
   });
+
+  // Create direction handle
+  createDirectionHandle(lngLat);
+  showToast('Drag the blue handle to set your travel direction');
 
   stopPlacingMarker();
 
@@ -1511,6 +1672,7 @@ function resetForm() {
   contactMade = null;
   injuryOccurred = null;
   currentInfrastructure = null;
+  cleanupDirectionUI();
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
   const typeDesc = document.getElementById('type-description');
   if (typeDesc) { typeDesc.classList.add('hidden'); typeDesc.textContent = ''; }
@@ -1574,6 +1736,7 @@ function setDefaultAnnoyanceDateTime() {
 // Close incident panel
 document.getElementById('panel-close').addEventListener('click', () => {
   incidentPanel.classList.remove('visible');
+  cleanupDirectionUI();
   if (placeholderMarker) {
     placeholderMarker.remove();
     placeholderMarker = null;
@@ -1585,6 +1748,7 @@ document.getElementById('panel-close').addEventListener('click', () => {
 // Close annoyance panel
 document.getElementById('annoyance-panel-close').addEventListener('click', () => {
   annoyancePanel.classList.remove('visible');
+  cleanupDirectionUI();
   if (placeholderMarker) {
     placeholderMarker.remove();
     placeholderMarker = null;
@@ -1670,6 +1834,7 @@ function resetAnnoyanceForm() {
   selectedAnnoyanceTypes = [];
   selectedOngoing = null;
   currentInfrastructure = null;
+  cleanupDirectionUI();
   document.querySelectorAll('.annoyance-type-btn').forEach(b => b.classList.remove('selected'));
   const typeDesc = document.getElementById('annoyance-type-description');
   if (typeDesc) { typeDesc.classList.add('hidden'); typeDesc.textContent = ''; }
@@ -1809,6 +1974,7 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     if (annContactConsent) annoyanceData.contactConsent = true;
     if (annMailingList) annoyanceData.mailingListOptIn = true;
     if (currentInfrastructure) annoyanceData.infrastructure = currentInfrastructure;
+    if (riderBearing !== null) annoyanceData.riderBearing = riderBearing;
 
     const annDocRef = await db.collection('annoyances').add(annoyanceData);
 
@@ -1826,6 +1992,7 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     }
 
     annoyancePanel.classList.remove('visible');
+    cleanupDirectionUI();
     if (placeholderMarker) {
       placeholderMarker.remove();
       placeholderMarker = null;
@@ -2008,6 +2175,7 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     // Add auto-detected infrastructure
     if (currentInfrastructure) incidentData.infrastructure = currentInfrastructure;
+    if (riderBearing !== null) incidentData.riderBearing = riderBearing;
 
     const docRef = await db.collection('incidents').add(incidentData);
 
@@ -2026,6 +2194,7 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     // Success
     incidentPanel.classList.remove('visible');
+    cleanupDirectionUI();
     if (placeholderMarker) {
       placeholderMarker.remove();
       placeholderMarker = null;

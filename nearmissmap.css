@@ -73,6 +73,18 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
   100% { transform: scale(2); opacity: 0; }
 }
 
+/* Direction handle for rider bearing */
+.direction-handle {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #3b82f6; border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+  cursor: grab; display: flex; align-items: center;
+  justify-content: center; color: white;
+  opacity: 0.4; transition: opacity 0.2s;
+}
+.direction-handle.active { opacity: 1; }
+.direction-handle:active { cursor: grabbing; }
+
 /* Toast */
 .toast {
   position: fixed; bottom: 32px; left: 50%; z-index: 9999;
