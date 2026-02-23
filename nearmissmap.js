@@ -41,6 +41,8 @@ let reportMode = 'incident'; // 'incident' or 'annoyance'
 let riderBearing = null;
 let directionHandle = null;
 let directionSet = false;
+let isDraggingDirection = false;
+let lastDragLngLat = null;
 
 // Form state
 let selectedTypes = [];
@@ -1382,6 +1384,8 @@ window.clearBearing = function() {
   directionSet = false;
   if (directionHandle) {
     directionHandle.getElement().classList.remove('active');
+    const icon = directionHandle.getElement().querySelector('i');
+    if (icon) icon.style.transform = 'rotate(-45deg)';
   }
   hideBearingDisplay();
   // Reset handle position above marker
@@ -1394,33 +1398,45 @@ window.clearBearing = function() {
   }
 };
 
-function createDirectionHandle(markerLngLat) {
-  // Project marker to screen, offset 50px north, unproject back
-  const markerPos = map.project(markerLngLat);
-  const handleScreenPos = [markerPos.x, markerPos.y - 50];
-  const handleLngLat = map.unproject(handleScreenPos);
+function createDirectionHandle(markerLngLat, handlePosition) {
+  // Use provided position or default 50px above marker
+  let handleLngLat;
+  if (handlePosition) {
+    handleLngLat = handlePosition;
+  } else {
+    const markerPos = map.project(markerLngLat);
+    handleLngLat = map.unproject([markerPos.x, markerPos.y - 50]);
+  }
 
   // Create the handle element
   const el = document.createElement('div');
-  el.className = 'direction-handle';
-  el.innerHTML = '<i class="fa-solid fa-location-arrow" style="font-size:12px;transform:rotate(-45deg)"></i>';
+  el.className = 'direction-handle' + (directionSet ? ' active' : '');
+  const iconEl = document.createElement('i');
+  iconEl.className = 'fa-solid fa-location-arrow';
+  iconEl.style.fontSize = '12px';
+  iconEl.style.transform = riderBearing !== null ? `rotate(${riderBearing - 45}deg)` : 'rotate(-45deg)';
+  el.appendChild(iconEl);
 
   directionHandle = new mapboxgl.Marker({ element: el, draggable: true })
     .setLngLat(handleLngLat)
     .addTo(map);
 
-  // Draw initial dashed line
-  updateDirectionLine(markerLngLat, [handleLngLat.lng, handleLngLat.lat]);
+  // Draw line and show bearing if already set
+  const fromArr = Array.isArray(markerLngLat) ? markerLngLat : [markerLngLat.lng, markerLngLat.lat];
+  const toArr = [handleLngLat.lng, handleLngLat.lat];
+  updateDirectionLine(fromArr, toArr);
+  if (riderBearing !== null) updateBearingDisplay(riderBearing);
 
-  // On handle drag: compute bearing, update display
+  // On handle drag: compute bearing, rotate arrow, update display
   directionHandle.on('drag', () => {
     const handlePos = directionHandle.getLngLat();
-    const markerPos = placeholderMarker.getLngLat();
-    const from = [markerPos.lng, markerPos.lat];
+    const mPos = placeholderMarker.getLngLat();
+    const from = [mPos.lng, mPos.lat];
     const to = [handlePos.lng, handlePos.lat];
     riderBearing = Math.round(calculateBearing(from, to));
     updateDirectionLine(from, to);
     updateBearingDisplay(riderBearing);
+    iconEl.style.transform = `rotate(${riderBearing - 45}deg)`;
     if (!directionSet) {
       directionSet = true;
       el.classList.add('active');
@@ -1442,31 +1458,30 @@ function stopPlacingMarker() {
   reportButtonsDiv.style.display = '';
 }
 
-// Map click to place marker
-map.on('click', async (e) => {
-  if (!isPlacingMarker) return;
+// Map click-hold-drag to place marker + set direction in one motion
+function handlePlacementStart(lngLat) {
+  if (!isPlacingMarker) return false;
 
-  const lngLat = [e.lngLat.lng, e.lngLat.lat];
-  reportCoords = lngLat;
+  const coords = [lngLat.lng, lngLat.lat];
+  reportCoords = coords;
 
   // Remove old marker and direction handle
   if (placeholderMarker) placeholderMarker.remove();
   cleanupDirectionUI();
 
   // Create pulsing marker
-  const el = document.createElement('div');
-  el.className = 'pulsing-marker';
-  placeholderMarker = new mapboxgl.Marker({ element: el, draggable: true })
-    .setLngLat(lngLat)
+  const markerEl = document.createElement('div');
+  markerEl.className = 'pulsing-marker';
+  placeholderMarker = new mapboxgl.Marker({ element: markerEl, draggable: true })
+    .setLngLat(coords)
     .addTo(map);
 
-  // Update coords on drag — also update direction line
+  // Marker dragend handler (for repositioning later)
   placeholderMarker.on('dragend', () => {
     const pos = placeholderMarker.getLngLat();
     reportCoords = [pos.lng, pos.lat];
     updateLocationDisplay(reportCoords);
     fetchInfrastructure(reportCoords);
-    // Update direction line and bearing if handle exists
     if (directionHandle) {
       const handlePos = directionHandle.getLngLat();
       const from = [pos.lng, pos.lat];
@@ -1479,29 +1494,80 @@ map.on('click', async (e) => {
     }
   });
 
+  isDraggingDirection = true;
+  lastDragLngLat = lngLat;
+  map.dragPan.disable();
+  return true;
+}
+
+function handlePlacementMove(lngLat, point) {
+  if (!isDraggingDirection || !placeholderMarker) return;
+
+  lastDragLngLat = lngLat;
+  const from = reportCoords;
+  const to = [lngLat.lng, lngLat.lat];
+
+  // Update direction line
+  updateDirectionLine(from, to);
+
+  // Check minimum drag distance (pixels) before counting as direction set
+  const markerScreen = map.project(from);
+  const dx = point.x - markerScreen.x;
+  const dy = point.y - markerScreen.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist > 20) {
+    riderBearing = Math.round(calculateBearing(from, to));
+    directionSet = true;
+  }
+}
+
+function handlePlacementEnd() {
+  if (!isDraggingDirection) return;
+  isDraggingDirection = false;
+  map.dragPan.enable();
+
   stopPlacingMarker();
+  updateLocationDisplay(reportCoords);
 
-  // Show correct panel and update location
-  updateLocationDisplay(lngLat);
-
+  // Reset form and show panel
   if (reportMode === 'annoyance') {
     resetAnnoyanceForm();
     setDefaultAnnoyanceDateTime();
     annoyancePanel.classList.add('visible');
-    fetchInfrastructure(lngLat);
+    fetchInfrastructure(reportCoords);
     validateAnnoyanceForm();
   } else {
     resetForm();
     setDefaultDateTime();
     incidentPanel.classList.add('visible');
-    fetchInfrastructure(lngLat);
+    fetchInfrastructure(reportCoords);
     validateForm();
   }
 
-  // Create direction handle AFTER form reset (reset calls cleanupDirectionUI)
-  createDirectionHandle(lngLat);
-  showToast('Drag the blue handle to set your travel direction');
+  // Create draggable handle AFTER form reset (reset calls cleanupDirectionUI)
+  if (directionSet && lastDragLngLat) {
+    createDirectionHandle(reportCoords, lastDragLngLat);
+  } else {
+    createDirectionHandle(reportCoords);
+  }
+}
+
+// Mouse events
+map.on('mousedown', (e) => {
+  if (handlePlacementStart(e.lngLat)) e.preventDefault();
 });
+map.on('mousemove', (e) => handlePlacementMove(e.lngLat, e.point));
+map.on('mouseup', () => handlePlacementEnd());
+
+// Touch events
+map.on('touchstart', (e) => {
+  if (e.points && e.points.length === 1) handlePlacementStart(e.lngLat);
+});
+map.on('touchmove', (e) => {
+  if (e.points && e.points.length === 1) handlePlacementMove(e.lngLat, e.point);
+});
+map.on('touchend', () => handlePlacementEnd());
 
 async function fetchInfrastructure(lngLat) {
   const isAnnoyance = reportMode === 'annoyance';
