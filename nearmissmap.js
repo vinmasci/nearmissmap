@@ -845,13 +845,16 @@ function addMapLayers() {
         </div>
         ${buildPhotoHtml(p)}
         ${infraHtml}
-        <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
-          <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+        <div class="pt-2.5 mt-2.5 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+            ${(p.upvoteCount && parseInt(p.upvoteCount) > 0) ? `<span class="text-[11px] font-medium text-blue-600"><i class="fa-solid fa-thumbs-up text-[9px] mr-0.5"></i>${p.upvoteCount} like${parseInt(p.upvoteCount) !== 1 ? 's' : ''}</span>` : ''}
+          </div>
           <div class="flex gap-1.5">
-            <button onclick="upvoteReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i>${p.upvoteCount ? ' ' + p.upvoteCount : ''}</button>
-            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
-            <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
-            ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
+            <button onclick="upvoteReport('incidents','${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Like</button>
+            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
+            <button onclick="flagReport('incidents','${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
+            ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
           </div>
         </div>
       </div>
@@ -913,13 +916,16 @@ function addMapLayers() {
         </div>
         ${buildPhotoHtml(p)}
         ${infraHtml}
-        <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
-          <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+        <div class="pt-2.5 mt-2.5 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
+            ${(p.upvoteCount && parseInt(p.upvoteCount) > 0) ? `<span class="text-[11px] font-medium text-blue-600"><i class="fa-solid fa-thumbs-up text-[9px] mr-0.5"></i>${p.upvoteCount} like${parseInt(p.upvoteCount) !== 1 ? 's' : ''}</span>` : ''}
+          </div>
           <div class="flex gap-1.5">
-            <button onclick="upvoteReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i>${p.upvoteCount ? ' ' + p.upvoteCount : ''}</button>
-            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
-            <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
-            ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
+            <button onclick="upvoteReport('annoyances','${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Like</button>
+            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
+            <button onclick="flagReport('annoyances','${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
+            ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="flex-1 py-1.5 px-2 inline-flex items-center justify-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
           </div>
         </div>
       </div>
@@ -2085,11 +2091,17 @@ window.flagReport = async function(collection, docId) {
 };
 
 window.upvoteReport = async function(collection, docId) {
+  const key = 'nmm_liked_' + docId;
+  if (localStorage.getItem(key)) {
+    showToast('You\'ve already liked this report');
+    return;
+  }
   try {
     const ref = db.collection(collection).doc(docId);
     await ref.update({
       upvoteCount: firebase.firestore.FieldValue.increment(1)
     });
+    localStorage.setItem(key, '1');
     showToast('Thanks for your feedback!');
   } catch (err) {
     console.error('Upvote error:', err);
