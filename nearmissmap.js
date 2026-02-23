@@ -853,10 +853,14 @@ function addMapLayers() {
       </div>
     `;
 
-    new mapboxgl.Popup({ maxWidth: '320px' })
-      .setLngLat(coords)
-      .setHTML(html)
-      .addTo(map);
+    if (window.innerWidth <= 768) {
+      showReportSheet(html);
+    } else {
+      new mapboxgl.Popup({ maxWidth: '320px' })
+        .setLngLat(coords)
+        .setHTML(html)
+        .addTo(map);
+    }
   });
 
   // Click annoyance point to show popup
@@ -912,7 +916,11 @@ function addMapLayers() {
         </div>
       </div>
     `;
-    new mapboxgl.Popup({ maxWidth: '320px' }).setLngLat(coords).setHTML(html).addTo(map);
+    if (window.innerWidth <= 768) {
+      showReportSheet(html);
+    } else {
+      new mapboxgl.Popup({ maxWidth: '320px' }).setLngLat(coords).setHTML(html).addTo(map);
+    }
   });
 
   // Cursor styles
@@ -2167,6 +2175,22 @@ window.openStreetView = function(lat, lng) {
 window.closeStreetView = function() {
   document.getElementById('streetview-modal').classList.add('hidden');
   document.getElementById('streetview-iframe').src = '';
+};
+
+// ============================================
+// MOBILE REPORT BOTTOM SHEET
+// ============================================
+window.showReportSheet = function(html) {
+  const sheet = document.getElementById('report-sheet');
+  const content = document.getElementById('report-sheet-content');
+  content.innerHTML = html;
+  sheet.classList.add('visible');
+  document.getElementById('report-sheet-backdrop').classList.add('visible');
+};
+
+window.hideReportSheet = function() {
+  document.getElementById('report-sheet').classList.remove('visible');
+  document.getElementById('report-sheet-backdrop').classList.remove('visible');
 };
 
 // ============================================
