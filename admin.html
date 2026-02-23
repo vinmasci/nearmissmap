@@ -191,6 +191,22 @@
     <img id="lightbox-img" src="" alt="Photo">
   </div>
 
+  <!-- Street View modal -->
+  <div id="streetview-modal" class="hidden fixed inset-0 z-[9997] flex items-center justify-center bg-black/60" onclick="if(event.target===this)closeStreetView()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-900">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-street-view text-blue-400"></i>
+          <span id="streetview-title" class="text-sm font-medium text-white">Street View</span>
+        </div>
+        <button onclick="closeStreetView()" class="text-slate-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="streetview-container" class="w-full" style="height:500px;">
+        <iframe id="streetview-iframe" class="w-full h-full border-0" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </div>
+
   <!-- Confirm dialog -->
   <div id="confirm-dialog" class="hidden fixed inset-0 z-[9998] flex items-center justify-center bg-black/50">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
@@ -336,6 +352,7 @@ async function loadReports() {
         flagged: d.flagged || false,
         reportCount: d.reportCount || 0,
         photoURLs: parsePhotos(d),
+        coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
         scariness: d.scariness || '',
         raw: d
       });
@@ -359,6 +376,7 @@ async function loadReports() {
         flagged: d.flagged || false,
         reportCount: d.reportCount || 0,
         photoURLs: parsePhotos(d),
+        coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
         raw: d
       });
     });
@@ -475,6 +493,10 @@ function renderTable(reports) {
       ? `<button onclick="unflagReport('${r.collection}','${r.id}')" class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"><i class="fa-solid fa-flag-checkered"></i>Unflag</button>`
       : '';
 
+    const streetViewBtn = r.coords
+      ? `<button onclick="openStreetView(${r.coords[1]},${r.coords[0]},'${escapeHtml(r.location || 'Report Location')}')" class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"><i class="fa-solid fa-street-view"></i>View</button>`
+      : '';
+
     const deleteBtn = `<button onclick="deleteReport('${r.collection}','${r.id}')" class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors"><i class="fa-solid fa-trash"></i>Delete</button>`;
 
     const reporterInfo = r.reporterEmail
@@ -490,7 +512,7 @@ function renderTable(reports) {
       <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
       <td class="px-4 py-3">${statusBadge}</td>
       <td class="px-4 py-3">${photo}</td>
-      <td class="px-4 py-3 text-right"><div class="flex gap-1.5 justify-end">${approveBtn}${unflagBtn}${deleteBtn}</div></td>
+      <td class="px-4 py-3 text-right"><div class="flex gap-1.5 justify-end">${streetViewBtn}${approveBtn}${unflagBtn}${deleteBtn}</div></td>
     </tr>`;
   }).join('');
 }
@@ -621,9 +643,26 @@ function closeLightbox(e) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeLightbox({ target: document.getElementById('lightbox'), currentTarget: document.getElementById('lightbox') });
+    closeStreetView();
     confirmCancel();
   }
 });
+
+// ============================================
+// STREET VIEW
+// ============================================
+function openStreetView(lat, lng, title) {
+  const key = (config.GOOGLE_PLACES_KEY || '');
+  document.getElementById('streetview-title').textContent = title || 'Street View';
+  const iframe = document.getElementById('streetview-iframe');
+  iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${key}&location=${lat},${lng}&heading=0&pitch=0&fov=90`;
+  document.getElementById('streetview-modal').classList.remove('hidden');
+}
+
+function closeStreetView() {
+  document.getElementById('streetview-modal').classList.add('hidden');
+  document.getElementById('streetview-iframe').src = '';
+}
 
 // ============================================
 // HELPERS
