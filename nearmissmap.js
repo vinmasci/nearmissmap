@@ -845,6 +845,7 @@ function addMapLayers() {
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
           <div class="flex gap-1.5">
+            <button onclick="upvoteReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i>${p.upvoteCount ? ' ' + p.upvoteCount : ''}</button>
             <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
             <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
             ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
@@ -909,6 +910,7 @@ function addMapLayers() {
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
           <div class="flex gap-1.5">
+            <button onclick="upvoteReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-thumbs-up text-[9px]"></i>${p.upvoteCount ? ' ' + p.upvoteCount : ''}</button>
             <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
             <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
             ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
@@ -1001,6 +1003,7 @@ function loadIncidents() {
           roadName: d.roadName || '',
           reportCount: d.reportCount || 0,
           flagged: d.flagged || false,
+          upvoteCount: d.upvoteCount || 0,
           photoURL: d.photoURL || '',
           photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
           reporterName: d.reporterName || 'Anonymous',
@@ -1047,6 +1050,7 @@ function loadAnnoyances() {
           description: d.description,
           roadName: d.roadName || '',
           flagged: d.flagged || false,
+          upvoteCount: d.upvoteCount || 0,
           photoURL: d.photoURL || '',
           photoURLs: d.photoURLs ? JSON.stringify(d.photoURLs) : '',
           reporterName: d.reporterName || 'Anonymous',
@@ -2040,6 +2044,19 @@ window.flagReport = async function(collection, docId) {
   } catch (err) {
     console.error('Flag error:', err);
     showToast('Could not flag report');
+  }
+};
+
+window.upvoteReport = async function(collection, docId) {
+  try {
+    const ref = db.collection(collection).doc(docId);
+    await ref.update({
+      upvoteCount: firebase.firestore.FieldValue.increment(1)
+    });
+    showToast('Thanks for your feedback!');
+  } catch (err) {
+    console.error('Upvote error:', err);
+    showToast('Could not upvote report');
   }
 };
 

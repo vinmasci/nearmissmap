@@ -385,6 +385,7 @@ async function loadReports() {
         verified: d.verified || false,
         flagged: d.flagged || false,
         reportCount: d.reportCount || 0,
+        upvoteCount: d.upvoteCount || 0,
         photoURLs: parsePhotos(d),
         coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
         scariness: d.scariness || '',
@@ -409,6 +410,7 @@ async function loadReports() {
         verified: d.verified || false,
         flagged: d.flagged || false,
         reportCount: d.reportCount || 0,
+        upvoteCount: d.upvoteCount || 0,
         photoURLs: parsePhotos(d),
         coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
         raw: d
@@ -505,6 +507,10 @@ function renderTable(reports) {
       ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Flagged ${r.reportCount} time(s)"><i class="fa-solid fa-flag mr-0.5"></i>${r.reportCount}</span>`
       : '';
 
+    const upvoteBadge = r.upvoteCount > 0
+      ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700" title="${r.upvoteCount} upvote(s)"><i class="fa-solid fa-thumbs-up mr-0.5"></i>${r.upvoteCount}</span>`
+      : '';
+
     const statusBadge = getStatusBadge(r.status);
 
     const desc = r.description.length > 120
@@ -538,7 +544,7 @@ function renderTable(reports) {
       : `<div class="text-xs text-gray-900">${escapeHtml(r.reporterName)}</div>`;
 
     return `<tr class="hover:bg-gray-50 ${r.flagged ? 'bg-red-50/50' : ''}" data-id="${r.id}">
-      <td class="px-4 py-3">${flagBadge}</td>
+      <td class="px-4 py-3"><div class="flex flex-col gap-1">${flagBadge}${upvoteBadge}</div></td>
       <td class="px-4 py-3"><div class="space-y-1">${collBadge}<div class="text-[11px] text-gray-500 mt-0.5">${escapeHtml(r.type)}</div></div></td>
       <td class="px-4 py-3 text-xs text-gray-700">${escapeHtml(r.location || '-')}</td>
       <td class="px-4 py-3 text-xs text-gray-700 max-w-xs">${desc}</td>
