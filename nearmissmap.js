@@ -1661,7 +1661,17 @@ function resetAnnoyanceForm() {
 // ============================================
 
 document.getElementById('annoyance-submit').addEventListener('click', async () => {
-  if (!reportCoords || !selectedAnnoyanceType) return;
+  if (!reportCoords) return;
+
+  if (!selectedAnnoyanceType) {
+    showToast('Please select what\'s annoying');
+    return;
+  }
+
+  if (selectedOngoing === null) {
+    showToast('Please select whether this is ongoing or a one-off');
+    return;
+  }
 
   const description = annoyanceDescEl.value.trim();
   if (description.length < 20) {
