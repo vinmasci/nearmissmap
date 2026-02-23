@@ -176,6 +176,7 @@
                 <th class="px-4 py-3 w-8"></th>
                 <th class="px-4 py-3">Type</th>
                 <th class="px-4 py-3">Location</th>
+                <th class="px-4 py-3">Bearing</th>
                 <th class="px-4 py-3 min-w-[200px]">Description</th>
                 <th class="px-4 py-3">Reporter</th>
                 <th class="px-4 py-3">Date</th>
@@ -185,7 +186,7 @@
               </tr>
             </thead>
             <tbody id="reports-tbody" class="divide-y divide-gray-100">
-              <tr><td colspan="9" class="px-4 py-12 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading reports...</td></tr>
+              <tr><td colspan="10" class="px-4 py-12 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading reports...</td></tr>
             </tbody>
           </table>
         </div>
@@ -400,6 +401,7 @@ async function loadReports() {
         photoURLs: parsePhotos(d),
         coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
         scariness: d.scariness || '',
+        riderBearing: d.riderBearing != null ? d.riderBearing : null,
         raw: d
       });
     });
@@ -425,6 +427,7 @@ async function loadReports() {
         upvoteCount: d.upvoteCount || 0,
         photoURLs: parsePhotos(d),
         coords: d.geometry && d.geometry.coordinates ? d.geometry.coordinates : null,
+        riderBearing: d.riderBearing != null ? d.riderBearing : null,
         raw: d
       });
     });
@@ -434,7 +437,7 @@ async function loadReports() {
   } catch (err) {
     console.error('Failed to load reports:', err);
     document.getElementById('reports-tbody').innerHTML =
-      '<tr><td colspan="9" class="px-4 py-12 text-center text-red-500">Failed to load reports. Check console.</td></tr>';
+      '<tr><td colspan="10" class="px-4 py-12 text-center text-red-500">Failed to load reports. Check console.</td></tr>';
   }
 }
 
@@ -506,7 +509,7 @@ function renderTable(reports) {
   const tbody = document.getElementById('reports-tbody');
 
   if (reports.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-12 text-center text-gray-400">No reports match your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="px-4 py-12 text-center text-gray-400">No reports match your filters</td></tr>';
     return;
   }
 
@@ -560,6 +563,7 @@ function renderTable(reports) {
       <td class="px-4 py-3"><div class="flex flex-col gap-1">${flagBadge}${upvoteBadge}</div></td>
       <td class="px-4 py-3"><div class="space-y-1">${collBadge}<div class="text-[11px] text-gray-500 mt-0.5">${escapeHtml(r.type)}</div></div></td>
       <td class="px-4 py-3 text-xs text-gray-700">${escapeHtml(r.location || '-')}</td>
+      <td class="px-4 py-3 text-xs">${r.riderBearing != null ? `<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700"><i class="fa-solid fa-location-arrow text-[9px]" style="transform:rotate(${(parseInt(r.riderBearing) - 45)}deg)"></i>${(() => { const b = parseInt(r.riderBearing); const dirs = ['N','NE','E','SE','S','SW','W','NW']; return dirs[Math.round(b/45)%8] + ' ' + b + '\u00B0'; })()}</span>` : '<span class="text-gray-300">-</span>'}</td>
       <td class="px-4 py-3 text-xs text-gray-700 max-w-xs">${desc}</td>
       <td class="px-4 py-3">${reporterInfo}</td>
       <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
@@ -821,7 +825,7 @@ function csvEscape(str) {
 // ============================================
 function exportReportsCSV() {
   if (filteredReports.length === 0) { showToast('No reports to export'); return; }
-  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury\n';
+  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury,Rider Bearing\n';
   const rows = filteredReports.map(r => {
     const date = r.date ? r.date.toISOString().split('T')[0] : '';
     const lat = r.coords ? r.coords[1] : '';
@@ -844,7 +848,8 @@ function exportReportsCSV() {
       lng,
       r.scariness || raw.scariness || '',
       raw.contactMade ? 'Yes' : 'No',
-      raw.injuryOccurred ? 'Yes' : 'No'
+      raw.injuryOccurred ? 'Yes' : 'No',
+      r.riderBearing != null ? r.riderBearing : ''
     ].join(',');
   }).join('\n');
   const blob = new Blob([header + rows], { type: 'text/csv' });
@@ -881,7 +886,8 @@ function exportReportsGeoJSON() {
           upvoteCount: r.upvoteCount || 0,
           scariness: r.scariness || raw.scariness || '',
           contactMade: raw.contactMade || false,
-          injuryOccurred: raw.injuryOccurred || false
+          injuryOccurred: raw.injuryOccurred || false,
+          riderBearing: r.riderBearing != null ? r.riderBearing : null
         }
       };
     })

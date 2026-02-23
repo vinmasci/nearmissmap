@@ -1435,12 +1435,27 @@ function createDirectionHandle(markerLngLat, handlePosition) {
   updateDirectionLine(fromArr, toArr);
   if (riderBearing !== null) updateBearingDisplay(riderBearing);
 
-  // On handle drag: compute bearing, rotate arrow, update display
+  // On handle drag: compute bearing, rotate arrow, update display (capped at 80px)
   directionHandle.on('drag', () => {
     const handlePos = directionHandle.getLngLat();
     const mPos = placeholderMarker.getLngLat();
     const from = [mPos.lng, mPos.lat];
-    const to = [handlePos.lng, handlePos.lat];
+    const markerScreen = map.project(from);
+    const handleScreen = map.project([handlePos.lng, handlePos.lat]);
+    const dx = handleScreen.x - markerScreen.x;
+    const dy = handleScreen.y - markerScreen.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    let to;
+    if (dist > 80) {
+      const scale = 80 / dist;
+      const clampedLngLat = map.unproject([markerScreen.x + dx * scale, markerScreen.y + dy * scale]);
+      directionHandle.setLngLat(clampedLngLat);
+      to = [clampedLngLat.lng, clampedLngLat.lat];
+    } else {
+      to = [handlePos.lng, handlePos.lat];
+    }
+
     riderBearing = Math.round(calculateBearing(from, to));
     updateDirectionLine(from, to);
     updateBearingDisplay(riderBearing);
@@ -1481,17 +1496,24 @@ map.on('click', (e) => {
     // Remove the tracking handle (will be replaced by draggable one)
     if (trackingHandle) { trackingHandle.remove(); trackingHandle = null; }
 
-    const lngLat = e.lngLat;
     const from = reportCoords;
-    const to = [lngLat.lng, lngLat.lat];
-
-    // Check minimum distance — save bearing before form reset wipes it
     const markerScreen = map.project(from);
     const dx = e.point.x - markerScreen.x;
     const dy = e.point.y - markerScreen.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Cap at 80px from marker
+    let lngLat = e.lngLat;
+    if (dist > 80) {
+      const scale = 80 / dist;
+      lngLat = map.unproject([markerScreen.x + dx * scale, markerScreen.y + dy * scale]);
+    }
+    const to = [lngLat.lng, lngLat.lat];
+
+    // Check minimum distance — save bearing before form reset wipes it
     let savedBearing = null;
     let savedSet = false;
-    if (Math.sqrt(dx * dx + dy * dy) > 20) {
+    if (dist > 20) {
       savedBearing = Math.round(calculateBearing(from, to));
       savedSet = true;
     }
@@ -1589,22 +1611,33 @@ map.on('click', (e) => {
 function trackDirection(e) {
   if (!isSettingDirection || !placeholderMarker) return;
   const from = reportCoords;
-  const to = [e.lngLat.lng, e.lngLat.lat];
+  const markerScreen = map.project(from);
+  let cursorX = e.point.x;
+  let cursorY = e.point.y;
+  const dx = cursorX - markerScreen.x;
+  const dy = cursorY - markerScreen.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // Cap at 80px from marker
+  let clampedLngLat = e.lngLat;
+  if (dist > 80) {
+    const scale = 80 / dist;
+    clampedLngLat = map.unproject([markerScreen.x + dx * scale, markerScreen.y + dy * scale]);
+  }
+
+  const to = [clampedLngLat.lng, clampedLngLat.lat];
   updateDirectionLine(from, to);
 
-  // Move the tracking handle to cursor position
+  // Move the tracking handle to (clamped) position
   if (trackingHandle) {
-    trackingHandle.setLngLat(e.lngLat);
+    trackingHandle.setLngLat(clampedLngLat);
     // Rotate arrow to face bearing direction
     const bearing = calculateBearing(from, to);
     const icon = trackingHandle.getElement().querySelector('i');
     if (icon) icon.style.transform = `rotate(${bearing - 45}deg)`;
 
     // Make handle opaque once moved far enough
-    const markerScreen = map.project(from);
-    const dx = e.point.x - markerScreen.x;
-    const dy = e.point.y - markerScreen.y;
-    if (Math.sqrt(dx * dx + dy * dy) > 20) {
+    if (dist > 20) {
       trackingHandle.getElement().classList.add('active');
     } else {
       trackingHandle.getElement().classList.remove('active');
