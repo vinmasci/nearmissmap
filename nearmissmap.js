@@ -1371,6 +1371,14 @@ function cleanupDirectionUI() {
     directionHandle.remove();
     directionHandle = null;
   }
+  if (trackingHandle) {
+    trackingHandle.remove();
+    trackingHandle = null;
+  }
+  if (isSettingDirection) {
+    isSettingDirection = false;
+    map.off('mousemove', trackDirection);
+  }
   if (map.getSource('direction-line')) {
     map.getSource('direction-line').setData({ type: 'FeatureCollection', features: [] });
   }
@@ -1461,6 +1469,7 @@ function stopPlacingMarker() {
 // Two-click flow: 1st click places marker + starts direction tracking,
 // 2nd click locks the direction handle in place.
 let isSettingDirection = false;
+let trackingHandle = null; // non-draggable handle that follows cursor
 
 map.on('click', (e) => {
   // 2nd click: lock direction handle
@@ -1469,25 +1478,30 @@ map.on('click', (e) => {
     map.getCanvas().style.cursor = '';
     map.off('mousemove', trackDirection);
 
+    // Remove the tracking handle (will be replaced by draggable one)
+    if (trackingHandle) { trackingHandle.remove(); trackingHandle = null; }
+
     const lngLat = e.lngLat;
     const from = reportCoords;
     const to = [lngLat.lng, lngLat.lat];
 
-    // Check minimum distance
+    // Check minimum distance — save bearing before form reset wipes it
     const markerScreen = map.project(from);
     const dx = e.point.x - markerScreen.x;
     const dy = e.point.y - markerScreen.y;
+    let savedBearing = null;
+    let savedSet = false;
     if (Math.sqrt(dx * dx + dy * dy) > 20) {
-      riderBearing = Math.round(calculateBearing(from, to));
-      directionSet = true;
+      savedBearing = Math.round(calculateBearing(from, to));
+      savedSet = true;
     }
 
-    // Clear the live-tracking line, then create the final draggable handle
+    // Clear the live-tracking line
     if (map.getSource('direction-line')) {
       map.getSource('direction-line').setData({ type: 'FeatureCollection', features: [] });
     }
 
-    // Show panel and reset form
+    // Show panel and reset form (this calls cleanupDirectionUI which clears bearing state)
     stopPlacingMarker();
     updateLocationDisplay(reportCoords);
 
@@ -1505,8 +1519,10 @@ map.on('click', (e) => {
       validateForm();
     }
 
-    // Create draggable handle AFTER form reset
-    if (directionSet) {
+    // Restore bearing state AFTER reset, then create handle
+    riderBearing = savedBearing;
+    directionSet = savedSet;
+    if (savedSet) {
       createDirectionHandle(reportCoords, lngLat);
     } else {
       createDirectionHandle(reportCoords);
@@ -1523,6 +1539,7 @@ map.on('click', (e) => {
   // Remove old marker and direction handle
   if (placeholderMarker) placeholderMarker.remove();
   cleanupDirectionUI();
+  if (trackingHandle) { trackingHandle.remove(); trackingHandle = null; }
 
   // Create pulsing marker
   const markerEl = document.createElement('div');
@@ -1549,12 +1566,24 @@ map.on('click', (e) => {
     }
   });
 
-  // Enter direction-setting mode: line follows cursor until 2nd click
+  // Create a visible (non-draggable) tracking handle at the marker position
+  const handleEl = document.createElement('div');
+  handleEl.className = 'direction-handle';
+  const trackIcon = document.createElement('i');
+  trackIcon.className = 'fa-solid fa-location-arrow';
+  trackIcon.style.fontSize = '12px';
+  trackIcon.style.transform = 'rotate(-45deg)';
+  handleEl.appendChild(trackIcon);
+  trackingHandle = new mapboxgl.Marker({ element: handleEl, draggable: false })
+    .setLngLat(coords)
+    .addTo(map);
+
+  // Enter direction-setting mode: handle + line follow cursor until 2nd click
   isSettingDirection = true;
   isPlacingMarker = false; // consumed, but don't restore buttons yet
   map.getCanvas().style.cursor = 'crosshair';
   map.on('mousemove', trackDirection);
-  showToast('Click again to set your travel direction (or same spot to skip)');
+  showToast('Now click in your direction of travel');
 });
 
 function trackDirection(e) {
@@ -1562,6 +1591,25 @@ function trackDirection(e) {
   const from = reportCoords;
   const to = [e.lngLat.lng, e.lngLat.lat];
   updateDirectionLine(from, to);
+
+  // Move the tracking handle to cursor position
+  if (trackingHandle) {
+    trackingHandle.setLngLat(e.lngLat);
+    // Rotate arrow to face bearing direction
+    const bearing = calculateBearing(from, to);
+    const icon = trackingHandle.getElement().querySelector('i');
+    if (icon) icon.style.transform = `rotate(${bearing - 45}deg)`;
+
+    // Make handle opaque once moved far enough
+    const markerScreen = map.project(from);
+    const dx = e.point.x - markerScreen.x;
+    const dy = e.point.y - markerScreen.y;
+    if (Math.sqrt(dx * dx + dy * dy) > 20) {
+      trackingHandle.getElement().classList.add('active');
+    } else {
+      trackingHandle.getElement().classList.remove('active');
+    }
+  }
 }
 
 async function fetchInfrastructure(lngLat) {
