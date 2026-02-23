@@ -941,7 +941,7 @@ function addMapLayers() {
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
             <div class="flex items-center gap-1.5">
-              ${(() => { const liked = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return liked ? `<span class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-400 bg-blue-50 border border-blue-200 rounded-md"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Liked${count > 0 ? ' · ' + count : ''}</span>` : `<button onclick="upvoteReport('incidents','${f.id || p.id}',this)" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Like${count > 0 ? ' · ' + count : ''}</button>`; })()}
+              ${(() => { const liked = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return liked ? `<span class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-orange-500 bg-orange-50 border border-orange-200 rounded-md"><i class="fa-solid fa-arrow-up text-[9px]"></i>${count > 0 ? count : ''}</span>` : `<button onclick="upvoteReport('incidents','${f.id || p.id}',this)" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-colors"><i class="fa-solid fa-arrow-up text-[9px]"></i>${count > 0 ? count : ''}</button>`; })()}
               <button onclick="openStreetView(${coords[1]},${coords[0]})" title="Street View" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"><i class="fa-solid fa-street-view text-[10px]"></i></button>
               <button onclick="flagReport('incidents','${f.id || p.id}')" title="Flag" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-gray-400 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"><i class="fa-solid fa-flag text-[10px]"></i></button>
               ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" title="Delete" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-red-400 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}
@@ -1012,7 +1012,7 @@ function addMapLayers() {
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
             <div class="flex items-center gap-1.5">
-              ${(() => { const liked = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return liked ? `<span class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-400 bg-blue-50 border border-blue-200 rounded-md"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Liked${count > 0 ? ' · ' + count : ''}</span>` : `<button onclick="upvoteReport('annoyances','${f.id || p.id}',this)" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"><i class="fa-solid fa-thumbs-up text-[9px]"></i> Like${count > 0 ? ' · ' + count : ''}</button>`; })()}
+              ${(() => { const liked = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return liked ? `<span class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-orange-500 bg-orange-50 border border-orange-200 rounded-md"><i class="fa-solid fa-arrow-up text-[9px]"></i>${count > 0 ? count : ''}</span>` : `<button onclick="upvoteReport('annoyances','${f.id || p.id}',this)" class="py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-colors"><i class="fa-solid fa-arrow-up text-[9px]"></i>${count > 0 ? count : ''}</button>`; })()}
               <button onclick="openStreetView(${coords[1]},${coords[0]})" title="Street View" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"><i class="fa-solid fa-street-view text-[10px]"></i></button>
               <button onclick="flagReport('annoyances','${f.id || p.id}')" title="Flag" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-gray-400 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"><i class="fa-solid fa-flag text-[10px]"></i></button>
               ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" title="Delete" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-red-400 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}
@@ -2468,7 +2468,7 @@ window.flagReport = async function(collection, docId) {
 window.upvoteReport = async function(collection, docId, btnEl) {
   const key = 'nmm_liked_' + docId;
   if (localStorage.getItem(key)) {
-    showToast('You\'ve already liked this report');
+    showToast('You\'ve already upvoted this report');
     return;
   }
   try {
@@ -2481,8 +2481,8 @@ window.upvoteReport = async function(collection, docId, btnEl) {
       const countMatch = btnEl.textContent.match(/(\d+)/);
       const newCount = (countMatch ? parseInt(countMatch[1]) : 0) + 1;
       const span = document.createElement('span');
-      span.className = 'py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-400 bg-blue-50 border border-blue-200 rounded-md';
-      span.innerHTML = '<i class="fa-solid fa-thumbs-up text-[9px]"></i> Liked · ' + newCount;
+      span.className = 'py-1 px-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-orange-500 bg-orange-50 border border-orange-200 rounded-md';
+      span.innerHTML = '<i class="fa-solid fa-arrow-up text-[9px]"></i>' + newCount;
       btnEl.replaceWith(span);
     }
     showToast('Thanks for your feedback!');

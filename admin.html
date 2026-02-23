@@ -524,7 +524,7 @@ function renderTable(reports) {
       : '';
 
     const upvoteBadge = r.upvoteCount > 0
-      ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700" title="${r.upvoteCount} upvote(s)"><i class="fa-solid fa-thumbs-up mr-0.5"></i>${r.upvoteCount}</span>`
+      ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700" title="${r.upvoteCount} upvote(s)"><i class="fa-solid fa-arrow-up mr-0.5"></i>${r.upvoteCount}</span>`
       : '';
 
     const statusBadge = getStatusBadge(r.status);
