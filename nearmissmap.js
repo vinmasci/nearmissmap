@@ -1774,7 +1774,64 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
 // ============================================
 
 document.getElementById('incident-submit').addEventListener('click', async () => {
-  if (!reportCoords || !selectedType || !selectedScariness) return;
+  if (!reportCoords) return;
+
+  if (!selectedType) {
+    showToast('Please select the type of incident');
+    return;
+  }
+
+  if (!selectedScariness) {
+    showToast('Please select how scary it was');
+    return;
+  }
+
+  if (contactMade === null) {
+    showToast('Please select whether contact/collision occurred');
+    return;
+  }
+
+  if (injuryOccurred === null) {
+    showToast('Please select whether there was an injury');
+    return;
+  }
+
+  if (!selectedParty) {
+    showToast('Please select other party involved');
+    return;
+  }
+
+  if (!document.getElementById('incident-lighting').value ||
+      !document.getElementById('incident-weather').value ||
+      !document.getElementById('incident-surface').value) {
+    showToast('Please fill in all conditions (lighting, weather, road surface)');
+    return;
+  }
+
+  if (!selectedReporter) {
+    showToast('Please select who you are reporting for');
+    return;
+  }
+
+  if (!document.getElementById('rider-age').value) {
+    showToast('Please select rider age range');
+    return;
+  }
+
+  if (!document.getElementById('rider-gender').value) {
+    showToast('Please select gender');
+    return;
+  }
+
+  if (!document.getElementById('ride-type').value) {
+    showToast('Please select ride type');
+    return;
+  }
+
+  if (!document.getElementById('bike-type').value) {
+    showToast('Please select bike type');
+    return;
+  }
 
   const description = descEl.value.trim();
   if (description.length < 20) {
