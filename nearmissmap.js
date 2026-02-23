@@ -1479,10 +1479,6 @@ map.on('click', async (e) => {
     }
   });
 
-  // Create direction handle
-  createDirectionHandle(lngLat);
-  showToast('Drag the blue handle to set your travel direction');
-
   stopPlacingMarker();
 
   // Show correct panel and update location
@@ -1501,6 +1497,10 @@ map.on('click', async (e) => {
     fetchInfrastructure(lngLat);
     validateForm();
   }
+
+  // Create direction handle AFTER form reset (reset calls cleanupDirectionUI)
+  createDirectionHandle(lngLat);
+  showToast('Drag the blue handle to set your travel direction');
 });
 
 async function fetchInfrastructure(lngLat) {
