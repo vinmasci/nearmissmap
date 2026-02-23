@@ -1458,11 +1458,66 @@ function stopPlacingMarker() {
   reportButtonsDiv.style.display = '';
 }
 
-// Map click-hold-drag to place marker + set direction in one motion
-function handlePlacementStart(lngLat) {
-  if (!isPlacingMarker) return false;
+// Two-click flow: 1st click places marker + starts direction tracking,
+// 2nd click locks the direction handle in place.
+let isSettingDirection = false;
 
-  const coords = [lngLat.lng, lngLat.lat];
+map.on('click', (e) => {
+  // 2nd click: lock direction handle
+  if (isSettingDirection) {
+    isSettingDirection = false;
+    map.getCanvas().style.cursor = '';
+    map.off('mousemove', trackDirection);
+
+    const lngLat = e.lngLat;
+    const from = reportCoords;
+    const to = [lngLat.lng, lngLat.lat];
+
+    // Check minimum distance
+    const markerScreen = map.project(from);
+    const dx = e.point.x - markerScreen.x;
+    const dy = e.point.y - markerScreen.y;
+    if (Math.sqrt(dx * dx + dy * dy) > 20) {
+      riderBearing = Math.round(calculateBearing(from, to));
+      directionSet = true;
+    }
+
+    // Clear the live-tracking line, then create the final draggable handle
+    if (map.getSource('direction-line')) {
+      map.getSource('direction-line').setData({ type: 'FeatureCollection', features: [] });
+    }
+
+    // Show panel and reset form
+    stopPlacingMarker();
+    updateLocationDisplay(reportCoords);
+
+    if (reportMode === 'annoyance') {
+      resetAnnoyanceForm();
+      setDefaultAnnoyanceDateTime();
+      annoyancePanel.classList.add('visible');
+      fetchInfrastructure(reportCoords);
+      validateAnnoyanceForm();
+    } else {
+      resetForm();
+      setDefaultDateTime();
+      incidentPanel.classList.add('visible');
+      fetchInfrastructure(reportCoords);
+      validateForm();
+    }
+
+    // Create draggable handle AFTER form reset
+    if (directionSet) {
+      createDirectionHandle(reportCoords, lngLat);
+    } else {
+      createDirectionHandle(reportCoords);
+    }
+    return;
+  }
+
+  // 1st click: place marker, start direction tracking
+  if (!isPlacingMarker) return;
+
+  const coords = [e.lngLat.lng, e.lngLat.lat];
   reportCoords = coords;
 
   // Remove old marker and direction handle
@@ -1494,80 +1549,20 @@ function handlePlacementStart(lngLat) {
     }
   });
 
-  isDraggingDirection = true;
-  lastDragLngLat = lngLat;
-  map.dragPan.disable();
-  return true;
-}
+  // Enter direction-setting mode: line follows cursor until 2nd click
+  isSettingDirection = true;
+  isPlacingMarker = false; // consumed, but don't restore buttons yet
+  map.getCanvas().style.cursor = 'crosshair';
+  map.on('mousemove', trackDirection);
+  showToast('Click again to set your travel direction (or same spot to skip)');
+});
 
-function handlePlacementMove(lngLat, point) {
-  if (!isDraggingDirection || !placeholderMarker) return;
-
-  lastDragLngLat = lngLat;
+function trackDirection(e) {
+  if (!isSettingDirection || !placeholderMarker) return;
   const from = reportCoords;
-  const to = [lngLat.lng, lngLat.lat];
-
-  // Update direction line
+  const to = [e.lngLat.lng, e.lngLat.lat];
   updateDirectionLine(from, to);
-
-  // Check minimum drag distance (pixels) before counting as direction set
-  const markerScreen = map.project(from);
-  const dx = point.x - markerScreen.x;
-  const dy = point.y - markerScreen.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-
-  if (dist > 20) {
-    riderBearing = Math.round(calculateBearing(from, to));
-    directionSet = true;
-  }
 }
-
-function handlePlacementEnd() {
-  if (!isDraggingDirection) return;
-  isDraggingDirection = false;
-  map.dragPan.enable();
-
-  stopPlacingMarker();
-  updateLocationDisplay(reportCoords);
-
-  // Reset form and show panel
-  if (reportMode === 'annoyance') {
-    resetAnnoyanceForm();
-    setDefaultAnnoyanceDateTime();
-    annoyancePanel.classList.add('visible');
-    fetchInfrastructure(reportCoords);
-    validateAnnoyanceForm();
-  } else {
-    resetForm();
-    setDefaultDateTime();
-    incidentPanel.classList.add('visible');
-    fetchInfrastructure(reportCoords);
-    validateForm();
-  }
-
-  // Create draggable handle AFTER form reset (reset calls cleanupDirectionUI)
-  if (directionSet && lastDragLngLat) {
-    createDirectionHandle(reportCoords, lastDragLngLat);
-  } else {
-    createDirectionHandle(reportCoords);
-  }
-}
-
-// Mouse events
-map.on('mousedown', (e) => {
-  if (handlePlacementStart(e.lngLat)) e.preventDefault();
-});
-map.on('mousemove', (e) => handlePlacementMove(e.lngLat, e.point));
-map.on('mouseup', () => handlePlacementEnd());
-
-// Touch events
-map.on('touchstart', (e) => {
-  if (e.points && e.points.length === 1) handlePlacementStart(e.lngLat);
-});
-map.on('touchmove', (e) => {
-  if (e.points && e.points.length === 1) handlePlacementMove(e.lngLat, e.point);
-});
-map.on('touchend', () => handlePlacementEnd());
 
 async function fetchInfrastructure(lngLat) {
   const isAnnoyance = reportMode === 'annoyance';
