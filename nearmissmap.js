@@ -1657,6 +1657,24 @@ function resetAnnoyanceForm() {
 }
 
 // ============================================
+// MAILING LIST UPSERT
+// ============================================
+function upsertMailingList(email, name, source) {
+  if (!email) return;
+  const docId = email.trim().toLowerCase().replace(/[.#$/\[\]]/g, '_');
+  const data = {
+    email: email.trim().toLowerCase(),
+    subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    source: source
+  };
+  if (name) data.name = name;
+  if (currentUser) data.uid = currentUser.uid;
+  db.collection('mailingList').doc(docId).set(data, { merge: true }).catch(e => {
+    console.warn('Mailing list upsert failed:', e);
+  });
+}
+
+// ============================================
 // SUBMIT ANNOYANCE
 // ============================================
 
@@ -1749,6 +1767,11 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     if (currentInfrastructure) annoyanceData.infrastructure = currentInfrastructure;
 
     const annDocRef = await db.collection('annoyances').add(annoyanceData);
+
+    // Fire-and-forget mailing list upsert
+    if (annMailingList && annContactEmail) {
+      upsertMailingList(annContactEmail, annContactName, 'annoyance');
+    }
 
     // Upload photos if provided
     if (selectedPhotos.annoyance.length > 0) {
@@ -1942,6 +1965,11 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
     if (currentInfrastructure) incidentData.infrastructure = currentInfrastructure;
 
     const docRef = await db.collection('incidents').add(incidentData);
+
+    // Fire-and-forget mailing list upsert
+    if (incMailingList && contactEmail) {
+      upsertMailingList(contactEmail, contactName, 'incident');
+    }
 
     // Upload photos if provided
     if (selectedPhotos.incident.length > 0) {
