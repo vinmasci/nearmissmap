@@ -38,7 +38,7 @@ let annoyancesData = { type: 'FeatureCollection', features: [] };
 let reportMode = 'incident'; // 'incident' or 'annoyance'
 
 // Form state
-let selectedType = null;
+let selectedTypes = [];
 let selectedScariness = null;
 let selectedParty = null;
 let contactMade = null;
@@ -47,7 +47,7 @@ let selectedReporter = null;
 let currentInfrastructure = null;
 
 // Annoyance form state
-let selectedAnnoyanceType = null;
+let selectedAnnoyanceTypes = [];
 let selectedOngoing = null;
 
 // ============================================
@@ -782,7 +782,10 @@ function addMapLayers() {
       day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }) : '';
 
-    const typeLabel = TYPE_LABELS[p.incidentType] || p.incidentType;
+    let allTypes = [];
+    try { allTypes = typeof p.incidentTypes === 'string' ? JSON.parse(p.incidentTypes) : (p.incidentTypes || []); } catch (e) {}
+    if (allTypes.length === 0 && p.incidentType) allTypes = [p.incidentType];
+    const typeLabel = allTypes.map(t => TYPE_LABELS[t] || t).join(', ');
 
     const scarinessStyles = {
       not_scary: 'bg-green-100 text-green-800',
@@ -870,7 +873,10 @@ function addMapLayers() {
     const f = e.features[0];
     const p = f.properties;
     const coords = f.geometry.coordinates.slice();
-    const typeLabel = ANNOYANCE_TYPE_LABELS[p.annoyanceType] || p.annoyanceType;
+    let allAnnTypes = [];
+    try { allAnnTypes = typeof p.annoyanceTypes === 'string' ? JSON.parse(p.annoyanceTypes) : (p.annoyanceTypes || []); } catch (e) {}
+    if (allAnnTypes.length === 0 && p.annoyanceType) allAnnTypes = [p.annoyanceType];
+    const typeLabel = allAnnTypes.map(t => ANNOYANCE_TYPE_LABELS[t] || t).join(', ');
     const ongoingLabel = p.isOngoing === true || p.isOngoing === 'true' ? 'Ongoing' : 'One-off';
 
     let infraHtml = '';
@@ -994,6 +1000,7 @@ function loadIncidents() {
           _reportType: 'incident',
           id: doc.id,
           incidentType: d.incidentType,
+          incidentTypes: JSON.stringify(d.incidentTypes || (d.incidentType ? [d.incidentType] : [])),
           scariness: d.scariness || d.severity || '',
           contactMade: d.contactMade || false,
           injuryOccurred: d.injuryOccurred || false,
@@ -1046,6 +1053,7 @@ function loadAnnoyances() {
           _reportType: 'annoyance',
           id: doc.id,
           annoyanceType: d.annoyanceType,
+          annoyanceTypes: JSON.stringify(d.annoyanceTypes || (d.annoyanceType ? [d.annoyanceType] : [])),
           isOngoing: d.isOngoing || false,
           description: d.description,
           roadName: d.roadName || '',
@@ -1184,7 +1192,7 @@ function applyFilters() {
 
   // Build filter for unclustered incident points
   const incidentFilter = ['all', ['!', ['has', 'point_count']], ['==', ['get', '_reportType'], 'incident']];
-  if (type) incidentFilter.push(['==', ['get', 'incidentType'], type]);
+  if (type) incidentFilter.push(['in', '"' + type + '"', ['get', 'incidentTypes']]);
   if (scariness) incidentFilter.push(['==', ['get', 'scariness'], scariness]);
   if (map.getLayer('incident-points')) map.setFilter('incident-points', incidentFilter);
 
@@ -1193,7 +1201,12 @@ function applyFilters() {
   if (type || scariness) {
     filteredIncidents = filteredIncidents.filter(f => {
       const p = f.properties;
-      if (type && p.incidentType !== type) return false;
+      if (type) {
+        let types = [];
+        try { types = typeof p.incidentTypes === 'string' ? JSON.parse(p.incidentTypes) : (p.incidentTypes || []); } catch (e) {}
+        if (types.length === 0 && p.incidentType) types = [p.incidentType];
+        if (!types.includes(type)) return false;
+      }
       if (scariness && p.scariness !== scariness) return false;
       return true;
     });
@@ -1362,12 +1375,23 @@ async function reverseGeocode(lngLat) {
 // Type buttons
 document.querySelectorAll('.type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    selectedType = btn.dataset.type;
-    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
+    const t = btn.dataset.type;
+    const idx = selectedTypes.indexOf(t);
+    if (idx >= 0) {
+      selectedTypes.splice(idx, 1);
+      btn.classList.remove('selected');
+    } else {
+      selectedTypes.push(t);
+      btn.classList.add('selected');
+    }
     const descEl = document.getElementById('type-description');
-    descEl.textContent = TYPE_DESCRIPTIONS[selectedType] || '';
-    descEl.classList.remove('hidden');
+    if (selectedTypes.length > 0) {
+      descEl.textContent = TYPE_DESCRIPTIONS[selectedTypes[selectedTypes.length - 1]] || '';
+      descEl.classList.remove('hidden');
+    } else {
+      descEl.classList.add('hidden');
+      descEl.textContent = '';
+    }
     validateForm();
   });
 });
@@ -1464,7 +1488,7 @@ function validateForm() {
     if (emailVal.length === 0) emailValid = false;
   }
 
-  const valid = reportCoords && selectedType && selectedScariness && desc.length >= 20 &&
+  const valid = reportCoords && selectedTypes.length > 0 && selectedScariness && desc.length >= 20 &&
     selectedReporter &&
     (riderAge && riderAge.value) &&
     (rideType && rideType.value) &&
@@ -1477,7 +1501,7 @@ function validateForm() {
 document.getElementById('contact-email').addEventListener('input', validateForm);
 
 function resetForm() {
-  selectedType = null;
+  selectedTypes = [];
   selectedScariness = null;
   selectedParty = null;
   contactMade = null;
@@ -1572,12 +1596,23 @@ document.getElementById('annoyance-panel-close').addEventListener('click', () =>
 // Annoyance type buttons
 document.querySelectorAll('.annoyance-type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    selectedAnnoyanceType = btn.dataset.type;
-    document.querySelectorAll('.annoyance-type-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
+    const t = btn.dataset.type;
+    const idx = selectedAnnoyanceTypes.indexOf(t);
+    if (idx >= 0) {
+      selectedAnnoyanceTypes.splice(idx, 1);
+      btn.classList.remove('selected');
+    } else {
+      selectedAnnoyanceTypes.push(t);
+      btn.classList.add('selected');
+    }
     const descEl = document.getElementById('annoyance-type-description');
-    descEl.textContent = ANNOYANCE_TYPE_DESCRIPTIONS[selectedAnnoyanceType] || '';
-    descEl.classList.remove('hidden');
+    if (selectedAnnoyanceTypes.length > 0) {
+      descEl.textContent = ANNOYANCE_TYPE_DESCRIPTIONS[selectedAnnoyanceTypes[selectedAnnoyanceTypes.length - 1]] || '';
+      descEl.classList.remove('hidden');
+    } else {
+      descEl.classList.add('hidden');
+      descEl.textContent = '';
+    }
     validateAnnoyanceForm();
   });
 });
@@ -1620,7 +1655,7 @@ function validateAnnoyanceForm() {
     if (emailVal.length === 0) emailValid = false;
   }
 
-  const valid = reportCoords && selectedAnnoyanceType && desc.length >= 20 && emailValid;
+  const valid = reportCoords && selectedAnnoyanceTypes.length > 0 && desc.length >= 20 && emailValid;
   document.getElementById('annoyance-submit').disabled = !valid;
 }
 
@@ -1628,7 +1663,7 @@ function validateAnnoyanceForm() {
 document.getElementById('annoyance-contact-email').addEventListener('input', validateAnnoyanceForm);
 
 function resetAnnoyanceForm() {
-  selectedAnnoyanceType = null;
+  selectedAnnoyanceTypes = [];
   selectedOngoing = null;
   currentInfrastructure = null;
   document.querySelectorAll('.annoyance-type-btn').forEach(b => b.classList.remove('selected'));
@@ -1685,7 +1720,7 @@ function upsertMailingList(email, name, source) {
 document.getElementById('annoyance-submit').addEventListener('click', async () => {
   if (!reportCoords) return;
 
-  if (!selectedAnnoyanceType) {
+  if (selectedAnnoyanceTypes.length === 0) {
     showToast('Please select what\'s annoying');
     return;
   }
@@ -1748,7 +1783,8 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
         coordinates: [reportCoords[0], reportCoords[1]]
       },
       location: new firebase.firestore.GeoPoint(reportCoords[1], reportCoords[0]),
-      annoyanceType: selectedAnnoyanceType,
+      annoyanceType: selectedAnnoyanceTypes[0],
+      annoyanceTypes: [...selectedAnnoyanceTypes],
       isOngoing: selectedOngoing || false,
       description: description,
       dateTime: firebase.firestore.Timestamp.fromDate(dateTime),
@@ -1813,7 +1849,7 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
 document.getElementById('incident-submit').addEventListener('click', async () => {
   if (!reportCoords) return;
 
-  if (!selectedType) {
+  if (selectedTypes.length === 0) {
     showToast('Please select the type of incident');
     return;
   }
@@ -1930,7 +1966,8 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
         coordinates: [reportCoords[0], reportCoords[1]]
       },
       location: new firebase.firestore.GeoPoint(reportCoords[1], reportCoords[0]),
-      incidentType: selectedType,
+      incidentType: selectedTypes[0],
+      incidentTypes: [...selectedTypes],
       scariness: selectedScariness,
       contactMade: contactMade || false,
       injuryOccurred: injuryOccurred || false,
