@@ -845,6 +845,7 @@ function addMapLayers() {
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
           <div class="flex gap-1.5">
+            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
             <button onclick="flagReport('incidents','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
             ${isAdmin ? `<button onclick="deleteIncident('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
           </div>
@@ -904,6 +905,7 @@ function addMapLayers() {
         <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
           <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
           <div class="flex gap-1.5">
+            <button onclick="openStreetView(${coords[1]},${coords[0]})" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50"><i class="fa-solid fa-street-view text-[9px]"></i> View</button>
             <button onclick="flagReport('annoyances','${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-white border border-gray-200 rounded-md hover:bg-gray-50"><i class="fa-solid fa-flag text-[9px]"></i> Flag</button>
             ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-white border border-red-200 rounded-md hover:bg-red-50"><i class="fa-solid fa-trash text-[9px]"></i> Delete</button>` : ''}
           </div>
@@ -2137,11 +2139,35 @@ window.lightboxNav = function(e, dir) {
 
 // Keyboard nav
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!document.getElementById('streetview-modal').classList.contains('hidden')) {
+      closeStreetView();
+      return;
+    }
+    if (document.getElementById('lightbox').classList.contains('active')) {
+      closeLightbox({ target: document.getElementById('lightbox'), currentTarget: document.getElementById('lightbox') });
+      return;
+    }
+  }
   if (!document.getElementById('lightbox').classList.contains('active')) return;
-  if (e.key === 'Escape') closeLightbox({ target: document.getElementById('lightbox'), currentTarget: document.getElementById('lightbox') });
   if (e.key === 'ArrowLeft') lightboxNav(e, -1);
   if (e.key === 'ArrowRight') lightboxNav(e, 1);
 });
+
+// ============================================
+// STREET VIEW
+// ============================================
+window.openStreetView = function(lat, lng) {
+  const key = (config.GOOGLE_PLACES_KEY || '');
+  const iframe = document.getElementById('streetview-iframe');
+  iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${key}&location=${lat},${lng}&heading=0&pitch=0&fov=90`;
+  document.getElementById('streetview-modal').classList.remove('hidden');
+};
+
+window.closeStreetView = function() {
+  document.getElementById('streetview-modal').classList.add('hidden');
+  document.getElementById('streetview-iframe').src = '';
+};
 
 // ============================================
 // PHOTO UPLOAD (multi-photo)
