@@ -434,6 +434,43 @@ function generateMarkerImages() {
   }
 }
 
+// Small directional arrow image for bearing indicators on markers.
+// Arrow is drawn at top of a tall canvas; center = marker position.
+// When icon-rotate is applied, the arrow orbits around the marker.
+function generateDirectionArrowImage() {
+  const ratio = window.devicePixelRatio || 1;
+  const w = 16, h = 40;
+  const pxW = w * ratio, pxH = h * ratio;
+  const canvas = document.createElement('canvas');
+  canvas.width = pxW;
+  canvas.height = pxH;
+  const ctx = canvas.getContext('2d');
+
+  // Triangle pointing up, near top of canvas
+  const cx = pxW / 2;
+  const tipY = 2 * ratio;
+  const baseY = 10 * ratio;
+  const halfW = 5 * ratio;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, tipY);
+  ctx.lineTo(cx + halfW, baseY);
+  ctx.lineTo(cx - halfW, baseY);
+  ctx.closePath();
+
+  // White outline for contrast
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2 * ratio;
+  ctx.stroke();
+
+  // Subtle dark blue fill
+  ctx.fillStyle = 'rgba(30, 58, 138, 0.65)';
+  ctx.fill();
+
+  const imageData = ctx.getImageData(0, 0, pxW, pxH);
+  map.addImage('direction-arrow', imageData, { pixelRatio: ratio });
+}
+
 // ============================================
 // MAP INIT
 // ============================================
@@ -721,6 +758,7 @@ function addMapLayers() {
   // Generate marker images (wait for Font Awesome to load)
   document.fonts.ready.then(() => {
     generateMarkerImages();
+    generateDirectionArrowImage();
 
     // Individual incident markers (filtered from combined source)
     map.addLayer({
@@ -749,6 +787,24 @@ function addMapLayers() {
       filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', '_reportType'], 'annoyance']],
       layout: {
         'icon-image': ['concat', 'annoyance-', ['get', 'annoyanceType']],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
+        'icon-allow-overlap': true
+      }
+    });
+
+    // Bearing direction arrows — subtle arrow on reports that have riderBearing
+    map.addLayer({
+      id: 'bearing-arrows',
+      type: 'symbol',
+      source: 'reports',
+      filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['!=', ['get', 'riderBearing'], null]
+      ],
+      layout: {
+        'icon-image': 'direction-arrow',
+        'icon-rotate': ['get', 'riderBearing'],
+        'icon-rotation-alignment': 'map',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
         'icon-allow-overlap': true
       }
