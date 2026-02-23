@@ -736,9 +736,14 @@ let allSubscribers = [];
 
 async function loadSubscribers() {
   try {
-    const snap = await db.collection('mailingList').orderBy('subscribedAt', 'desc').get();
+    const snap = await db.collection('mailingList').get();
     allSubscribers = [];
     snap.forEach(doc => allSubscribers.push({ id: doc.id, ...doc.data() }));
+    allSubscribers.sort((a, b) => {
+      const ta = a.subscribedAt ? a.subscribedAt.toMillis() : 0;
+      const tb = b.subscribedAt ? b.subscribedAt.toMillis() : 0;
+      return tb - ta;
+    });
     document.getElementById('stat-subscribers').textContent = allSubscribers.length;
     document.getElementById('stat-subscribers-card').textContent = allSubscribers.length;
     renderSubscribers();
