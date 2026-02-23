@@ -434,10 +434,11 @@ function generateMarkerImages() {
   }
 }
 
-// Small directional arrow image for bearing indicators on markers.
+// Small directional arrow images for bearing indicators on markers.
 // Arrow is drawn at top of a tall canvas; center = marker position.
 // When icon-rotate is applied, the arrow orbits around the marker.
-function generateDirectionArrowImage() {
+// One image per marker color so the arrow matches the marker.
+function generateDirectionArrowImages() {
   const ratio = window.devicePixelRatio || 1;
   const w = 16, h = 40;
   const pxW = w * ratio, pxH = h * ratio;
@@ -446,29 +447,33 @@ function generateDirectionArrowImage() {
   canvas.height = pxH;
   const ctx = canvas.getContext('2d');
 
-  // Triangle pointing up, near top of canvas
   const cx = pxW / 2;
   const tipY = 2 * ratio;
   const baseY = 10 * ratio;
   const halfW = 5 * ratio;
 
-  ctx.beginPath();
-  ctx.moveTo(cx, tipY);
-  ctx.lineTo(cx + halfW, baseY);
-  ctx.lineTo(cx - halfW, baseY);
-  ctx.closePath();
+  function drawArrow(name, color) {
+    ctx.clearRect(0, 0, pxW, pxH);
+    ctx.beginPath();
+    ctx.moveTo(cx, tipY);
+    ctx.lineTo(cx + halfW, baseY);
+    ctx.lineTo(cx - halfW, baseY);
+    ctx.closePath();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2 * ratio;
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fill();
+    const imageData = ctx.getImageData(0, 0, pxW, pxH);
+    map.addImage(name, imageData, { pixelRatio: ratio });
+  }
 
-  // White outline for contrast
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2 * ratio;
-  ctx.stroke();
-
-  // Subtle dark blue fill
-  ctx.fillStyle = 'rgba(30, 58, 138, 0.65)';
-  ctx.fill();
-
-  const imageData = ctx.getImageData(0, 0, pxW, pxH);
-  map.addImage('direction-arrow', imageData, { pixelRatio: ratio });
+  // One arrow per scariness color (incidents)
+  for (const [scare, color] of Object.entries(SCARINESS_COLORS)) {
+    drawArrow(`arrow-${scare}`, color);
+  }
+  // Annoyance arrow
+  drawArrow('arrow-annoyance', ANNOYANCE_MARKER_COLOR);
 }
 
 // ============================================
@@ -758,7 +763,7 @@ function addMapLayers() {
   // Generate marker images (wait for Font Awesome to load)
   document.fonts.ready.then(() => {
     generateMarkerImages();
-    generateDirectionArrowImage();
+    generateDirectionArrowImages();
 
     // Individual incident markers (filtered from combined source)
     map.addLayer({
@@ -792,7 +797,7 @@ function addMapLayers() {
       }
     });
 
-    // Bearing direction arrows — subtle arrow on reports that have riderBearing
+    // Bearing direction arrows — color-matched arrow on reports that have riderBearing
     map.addLayer({
       id: 'bearing-arrows',
       type: 'symbol',
@@ -802,7 +807,12 @@ function addMapLayers() {
         ['!=', ['get', 'riderBearing'], null]
       ],
       layout: {
-        'icon-image': 'direction-arrow',
+        'icon-image': [
+          'case',
+          ['==', ['get', '_reportType'], 'annoyance'], 'arrow-annoyance',
+          // Incidents: match scariness color
+          ['concat', 'arrow-', ['get', 'scariness']]
+        ],
         'icon-rotate': ['get', 'riderBearing'],
         'icon-rotation-alignment': 'map',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 10, 0.75, 14, 0.9],
