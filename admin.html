@@ -174,16 +174,16 @@
             <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
               <tr>
                 <th class="px-4 py-3 w-8"></th>
-                <th class="px-4 py-3">Type</th>
-                <th class="px-4 py-3">Location</th>
-                <th class="px-4 py-3">Bearing</th>
-                <th class="px-4 py-3">Tags</th>
-                <th class="px-4 py-3 min-w-[200px]">Description</th>
-                <th class="px-4 py-3">Reporter</th>
-                <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Photo</th>
-                <th class="px-4 py-3 text-right">Actions</th>
+                <th class="px-4 py-3 whitespace-nowrap">Type</th>
+                <th class="px-4 py-3 whitespace-nowrap min-w-[160px]">Location</th>
+                <th class="px-4 py-3 whitespace-nowrap">Bearing</th>
+                <th class="px-4 py-3 whitespace-nowrap min-w-[140px]">Tags</th>
+                <th class="px-4 py-3 whitespace-nowrap min-w-[300px]">Description</th>
+                <th class="px-4 py-3 whitespace-nowrap min-w-[160px]">Reporter</th>
+                <th class="px-4 py-3 whitespace-nowrap">Date</th>
+                <th class="px-4 py-3 whitespace-nowrap">Status</th>
+                <th class="px-4 py-3 whitespace-nowrap">Photo</th>
+                <th class="px-4 py-3 whitespace-nowrap text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="reports-tbody" class="divide-y divide-gray-100">
@@ -616,16 +616,16 @@ function renderTable(reports) {
 
     return `<tr class="hover:bg-gray-50 ${r.flagged ? 'bg-red-50/50' : ''}" data-id="${r.id}">
       <td class="px-4 py-3"><div class="flex flex-col gap-1">${flagBadge}${upvoteBadge}</div></td>
-      <td class="px-4 py-3"><div class="space-y-1">${collBadge}<div class="text-[11px] text-gray-500 mt-0.5">${escapeHtml(r.type)}</div></div></td>
-      <td class="px-4 py-3 text-xs text-gray-700">${escapeHtml(r.location || '-')}</td>
+      <td class="px-4 py-3 whitespace-nowrap"><div class="space-y-1">${collBadge}<div class="text-[11px] text-gray-500 mt-0.5">${escapeHtml(r.type)}</div></div></td>
+      <td class="px-4 py-3 text-xs text-gray-700 whitespace-nowrap">${escapeHtml(r.location || '-')}</td>
       <td class="px-4 py-3 text-xs">${r.riderBearing != null ? `<span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700"><i class="fa-solid fa-location-arrow text-[9px]" style="transform:rotate(${(parseInt(r.riderBearing) - 45)}deg)"></i>${(() => { const b = parseInt(r.riderBearing); const dirs = ['N','NE','E','SE','S','SW','W','NW']; return dirs[Math.round(b/45)%8] + ' ' + b + '\u00B0'; })()}</span>` : '<span class="text-gray-300">-</span>'}</td>
       <td class="px-4 py-3 text-xs">${buildTagsPills(r)}</td>
-      <td class="px-4 py-3 text-xs text-gray-700 max-w-xs">${desc}</td>
-      <td class="px-4 py-3">${reporterInfo}</td>
+      <td class="px-4 py-3 text-xs text-gray-700 min-w-[300px]">${desc}</td>
+      <td class="px-4 py-3 whitespace-nowrap">${reporterInfo}</td>
       <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">${dateStr}</td>
-      <td class="px-4 py-3">${statusBadge}</td>
-      <td class="px-4 py-3">${photo}</td>
-      <td class="px-4 py-3 text-right"><div class="flex gap-1.5 justify-end">${streetViewBtn}${approveBtn}${unflagBtn}${deleteBtn}</div></td>
+      <td class="px-4 py-3 whitespace-nowrap">${statusBadge}</td>
+      <td class="px-4 py-3 whitespace-nowrap">${photo}</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap"><div class="flex gap-1.5 justify-end">${streetViewBtn}${approveBtn}${unflagBtn}${deleteBtn}</div></td>
     </tr>`;
   }).join('');
 }
