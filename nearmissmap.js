@@ -2580,6 +2580,13 @@ if (auth) {
       if (userInfo) userInfo.classList.remove('hidden');
       if (userName) userName.textContent = user.displayName || user.email || 'User';
 
+      // Show admin button if user is admin
+      const adminBtn = document.getElementById('nav-admin-btn');
+      if (adminBtn) {
+        if (isAdmin) adminBtn.classList.remove('hidden');
+        else adminBtn.classList.add('hidden');
+      }
+
       // Update form panels — show logged-in state
       const hasName = !!user.displayName;
       const hasEmail = !!user.email;
