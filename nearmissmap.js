@@ -1850,9 +1850,14 @@ function validateForm() {
   const rideType = document.getElementById('ride-type');
   const bikeType = document.getElementById('bike-type');
 
-  // Email validation for anonymous users
+  // Name + email validation for anonymous users
   let emailValid = true;
+  let nameValid = true;
   if (!currentUser) {
+    const nameEl = document.getElementById('contact-name');
+    const nameVal = (nameEl.value || '').trim();
+    if (nameVal.length === 0) nameValid = false;
+
     const emailEl = document.getElementById('contact-email');
     const emailError = document.getElementById('incident-email-error');
     const emailVal = (emailEl.value || '').trim();
@@ -1871,11 +1876,12 @@ function validateForm() {
     (riderAge && riderAge.value) &&
     (rideType && rideType.value) &&
     (bikeType && bikeType.value) &&
-    emailValid;
+    emailValid && nameValid;
   document.getElementById('incident-submit').disabled = !valid;
 }
 
-// Re-validate when email changes (incident)
+// Re-validate when name or email changes (incident)
+document.getElementById('contact-name').addEventListener('input', validateForm);
 document.getElementById('contact-email').addEventListener('input', validateForm);
 
 function resetForm() {
@@ -2020,9 +2026,14 @@ annoyanceDescEl.addEventListener('input', () => {
 function validateAnnoyanceForm() {
   const desc = annoyanceDescEl.value.trim();
 
-  // Email validation for anonymous users
+  // Name + email validation for anonymous users
   let emailValid = true;
+  let nameValid = true;
   if (!currentUser) {
+    const nameEl = document.getElementById('annoyance-contact-name');
+    const nameVal = (nameEl.value || '').trim();
+    if (nameVal.length === 0) nameValid = false;
+
     const emailEl = document.getElementById('annoyance-contact-email');
     const emailError = document.getElementById('annoyance-email-error');
     const emailVal = (emailEl.value || '').trim();
@@ -2036,11 +2047,12 @@ function validateAnnoyanceForm() {
     if (emailVal.length === 0) emailValid = false;
   }
 
-  const valid = reportCoords && selectedAnnoyanceTypes.length > 0 && desc.length >= 20 && emailValid;
+  const valid = reportCoords && selectedAnnoyanceTypes.length > 0 && desc.length >= 20 && emailValid && nameValid;
   document.getElementById('annoyance-submit').disabled = !valid;
 }
 
-// Re-validate when email changes (annoyance)
+// Re-validate when name or email changes (annoyance)
+document.getElementById('annoyance-contact-name').addEventListener('input', validateAnnoyanceForm);
 document.getElementById('annoyance-contact-email').addEventListener('input', validateAnnoyanceForm);
 
 function resetAnnoyanceForm() {
