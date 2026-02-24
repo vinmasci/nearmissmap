@@ -881,7 +881,7 @@ function csvEscape(str) {
 // ============================================
 function exportReportsCSV() {
   if (filteredReports.length === 0) { showToast('No reports to export'); return; }
-  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Incident DateTime,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury,Rider Bearing,Other Party,Ongoing,Road Type,Speed Limit,Bike Infrastructure,Lighting,Weather,Surface,Rider Age,Rider Gender,Ride Type,Bike Type,Reporting For\n';
+  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Incident DateTime,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury,Rider Bearing,Other Party,Ongoing,Road Type,Speed Limit,Bike Infrastructure,Lighting,Weather,Surface,Rider Age,Rider Gender,Ride Type,Bike Type,Reporting For,Reported By (UID),Contact Name,Contact Consent,Mailing List Opt-In,Photo URLs\n';
   const rows = filteredReports.map(r => {
     const date = r.date ? r.date.toISOString().split('T')[0] : '';
     const lat = r.coords ? r.coords[1] : '';
@@ -919,7 +919,12 @@ function exportReportsCSV() {
       raw.riderGender || '',
       raw.rideType || '',
       raw.bikeType || '',
-      raw.reportingFor || ''
+      raw.reportingFor || '',
+      csvEscape(r.reportedBy || ''),
+      csvEscape(raw.contactName || ''),
+      raw.contactConsent ? 'Yes' : 'No',
+      raw.mailingListOptIn ? 'Yes' : 'No',
+      csvEscape((r.photoURLs || []).join(' | '))
     ].join(',');
   }).join('\n');
   const blob = new Blob([header + rows], { type: 'text/csv' });
@@ -971,7 +976,12 @@ function exportReportsGeoJSON() {
           riderGender: raw.riderGender || '',
           rideType: raw.rideType || '',
           bikeType: raw.bikeType || '',
-          reportingFor: raw.reportingFor || ''
+          reportingFor: raw.reportingFor || '',
+          reportedBy: r.reportedBy || '',
+          contactName: raw.contactName || '',
+          contactConsent: raw.contactConsent || false,
+          mailingListOptIn: raw.mailingListOptIn || false,
+          photoURLs: r.photoURLs || []
         }
       };
     })
