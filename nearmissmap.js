@@ -2927,7 +2927,7 @@ function showToast(message, persistent) {
   toast.classList.add('visible');
   if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
   if (!persistent) {
-    _toastTimer = setTimeout(() => toast.classList.remove('visible'), 3000);
+    _toastTimer = setTimeout(() => toast.classList.remove('visible'), 6000);
   }
 }
 function hideToast() {
