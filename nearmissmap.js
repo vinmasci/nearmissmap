@@ -1884,8 +1884,9 @@ function validateForm() {
   if (!emailValid) missing.push('valid email');
 
   const btn = document.getElementById('incident-submit');
-  btn.disabled = missing.length > 0;
   btn._missingFields = missing;
+  btn.classList.toggle('opacity-50', missing.length > 0);
+  btn.classList.toggle('opacity-100', missing.length === 0);
 }
 
 // Re-validate when name or email changes (incident)
@@ -1945,7 +1946,10 @@ function resetForm() {
     incidentAnonBtn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
     incidentAnonBtn.classList.add('text-gray-500', 'border-gray-200');
   }
-  document.getElementById('incident-submit').disabled = true;
+  const incSubmit = document.getElementById('incident-submit');
+  incSubmit._missingFields = ['all fields'];
+  incSubmit.classList.add('opacity-50');
+  incSubmit.classList.remove('opacity-100');
 }
 
 function setDefaultDateTime() {
@@ -2063,8 +2067,9 @@ function validateAnnoyanceForm() {
   if (!emailValid) missing.push('valid email');
 
   const btn = document.getElementById('annoyance-submit');
-  btn.disabled = missing.length > 0;
   btn._missingFields = missing;
+  btn.classList.toggle('opacity-50', missing.length > 0);
+  btn.classList.toggle('opacity-100', missing.length === 0);
 }
 
 // Re-validate when name or email changes (annoyance)
@@ -2102,7 +2107,10 @@ function resetAnnoyanceForm() {
     annAnonBtn.classList.remove('selected', 'border-blue-500', 'bg-blue-50', 'text-blue-700');
     annAnonBtn.classList.add('text-gray-500', 'border-gray-200');
   }
-  document.getElementById('annoyance-submit').disabled = true;
+  const annSubmit = document.getElementById('annoyance-submit');
+  annSubmit._missingFields = ['all fields'];
+  annSubmit.classList.add('opacity-50');
+  annSubmit.classList.remove('opacity-100');
 }
 
 // ============================================
@@ -2129,7 +2137,7 @@ function upsertMailingList(email, name, source) {
 
 document.getElementById('annoyance-submit').addEventListener('click', async () => {
   const annBtn = document.getElementById('annoyance-submit');
-  if (annBtn.disabled && annBtn._missingFields && annBtn._missingFields.length > 0) {
+  if (annBtn._missingFields && annBtn._missingFields.length > 0) {
     showToast('Missing: ' + annBtn._missingFields.join(', '));
     return;
   }
@@ -2265,7 +2273,7 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
 
 document.getElementById('incident-submit').addEventListener('click', async () => {
   const incBtn = document.getElementById('incident-submit');
-  if (incBtn.disabled && incBtn._missingFields && incBtn._missingFields.length > 0) {
+  if (incBtn._missingFields && incBtn._missingFields.length > 0) {
     showToast('Missing: ' + incBtn._missingFields.join(', '));
     return;
   }
