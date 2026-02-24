@@ -1561,6 +1561,7 @@ map.on('click', (e) => {
 
     // Remove the tracking handle (will be replaced by draggable one)
     if (trackingHandle) { trackingHandle.remove(); trackingHandle = null; }
+    hideToast();
 
     const from = reportCoords;
     const markerScreen = map.project(from);
@@ -1654,24 +1655,27 @@ map.on('click', (e) => {
     }
   });
 
-  // Create a visible (non-draggable) tracking handle at the marker position
+  // Create a visible (non-draggable) tracking handle, offset 40px above marker
   const handleEl = document.createElement('div');
-  handleEl.className = 'direction-handle';
+  handleEl.className = 'direction-handle active';
   const trackIcon = document.createElement('i');
   trackIcon.className = 'fa-solid fa-location-arrow';
   trackIcon.style.fontSize = '12px';
   trackIcon.style.transform = 'rotate(-45deg)';
   handleEl.appendChild(trackIcon);
+  const markerScreen = map.project(coords);
+  const offsetLngLat = map.unproject([markerScreen.x, markerScreen.y - 40]);
   trackingHandle = new mapboxgl.Marker({ element: handleEl, draggable: false })
-    .setLngLat(coords)
+    .setLngLat(offsetLngLat)
     .addTo(map);
+  updateDirectionLine(coords, [offsetLngLat.lng, offsetLngLat.lat]);
 
   // Enter direction-setting mode: handle + line follow cursor until 2nd click
   isSettingDirection = true;
   isPlacingMarker = false; // consumed, but don't restore buttons yet
   map.getCanvas().style.cursor = 'crosshair';
   map.on('mousemove', trackDirection);
-  showToast('Now click in your direction of travel');
+  showToast('Now click in your direction of travel', true);
 });
 
 function trackDirection(e) {
@@ -2843,11 +2847,20 @@ window.toggleAnon = function(btn, panel) {
 // HELPERS
 // ============================================
 
-function showToast(message) {
+let _toastTimer = null;
+function showToast(message, persistent) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.classList.add('visible');
-  setTimeout(() => toast.classList.remove('visible'), 3000);
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  if (!persistent) {
+    _toastTimer = setTimeout(() => toast.classList.remove('visible'), 3000);
+  }
+}
+function hideToast() {
+  const toast = document.getElementById('toast');
+  toast.classList.remove('visible');
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
 }
 
 function escapeHtml(str) {
