@@ -1850,15 +1850,17 @@ function validateForm() {
   const rideType = document.getElementById('ride-type');
   const bikeType = document.getElementById('bike-type');
 
-  // Name + email validation for anonymous users
+  // Name + email validation
   let emailValid = true;
   let nameValid = true;
-  if (!currentUser) {
-    const nameEl = document.getElementById('contact-name');
-    const nameVal = (nameEl.value || '').trim();
-    if (nameVal.length === 0) nameValid = false;
-
-    const emailEl = document.getElementById('contact-email');
+  const nameEl = document.getElementById('contact-name');
+  const emailEl = document.getElementById('contact-email');
+  // Check name if field is visible (anonymous, or signed-in without displayName)
+  if (nameEl && !nameEl.classList.contains('hidden')) {
+    if ((nameEl.value || '').trim().length === 0) nameValid = false;
+  }
+  // Check email if field is visible (anonymous, or signed-in without email)
+  if (emailEl && !emailEl.classList.contains('hidden')) {
     const emailError = document.getElementById('incident-email-error');
     const emailVal = (emailEl.value || '').trim();
     if (emailVal.length > 0 && !isValidEmail(emailVal)) {
@@ -1867,7 +1869,6 @@ function validateForm() {
     } else {
       if (emailError) emailError.classList.add('hidden');
     }
-    // Email is required for anonymous
     if (emailVal.length === 0) emailValid = false;
   }
 
@@ -2026,15 +2027,17 @@ annoyanceDescEl.addEventListener('input', () => {
 function validateAnnoyanceForm() {
   const desc = annoyanceDescEl.value.trim();
 
-  // Name + email validation for anonymous users
+  // Name + email validation
   let emailValid = true;
   let nameValid = true;
-  if (!currentUser) {
-    const nameEl = document.getElementById('annoyance-contact-name');
-    const nameVal = (nameEl.value || '').trim();
-    if (nameVal.length === 0) nameValid = false;
-
-    const emailEl = document.getElementById('annoyance-contact-email');
+  const nameEl = document.getElementById('annoyance-contact-name');
+  const emailEl = document.getElementById('annoyance-contact-email');
+  // Check name if field is visible (anonymous, or signed-in without displayName)
+  if (nameEl && !nameEl.classList.contains('hidden')) {
+    if ((nameEl.value || '').trim().length === 0) nameValid = false;
+  }
+  // Check email if field is visible (anonymous, or signed-in without email)
+  if (emailEl && !emailEl.classList.contains('hidden')) {
     const emailError = document.getElementById('annoyance-email-error');
     const emailVal = (emailEl.value || '').trim();
     if (emailVal.length > 0 && !isValidEmail(emailVal)) {
@@ -2043,7 +2046,6 @@ function validateAnnoyanceForm() {
     } else {
       if (emailError) emailError.classList.add('hidden');
     }
-    // Email is required for anonymous
     if (emailVal.length === 0) emailValid = false;
   }
 
@@ -2152,9 +2154,9 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
     // Determine contact info based on auth state
     let annContactName, annContactEmail, displayName;
     if (currentUser) {
-      annContactEmail = currentUser.email;
-      annContactName = currentUser.displayName || currentUser.email;
-      displayName = isAnonToggled ? 'Anonymous' : (currentUser.displayName || currentUser.email || 'Anonymous');
+      annContactEmail = currentUser.email || (document.getElementById('annoyance-contact-email').value || '').trim();
+      annContactName = currentUser.displayName || (document.getElementById('annoyance-contact-name').value || '').trim() || annContactEmail;
+      displayName = isAnonToggled ? 'Anonymous' : (annContactName || 'Anonymous');
     } else {
       annContactName = (document.getElementById('annoyance-contact-name').value || '').trim() || null;
       annContactEmail = (document.getElementById('annoyance-contact-email').value || '').trim();
@@ -2337,9 +2339,9 @@ document.getElementById('incident-submit').addEventListener('click', async () =>
 
     let contactName, contactEmail, displayName;
     if (currentUser) {
-      contactEmail = currentUser.email;
-      contactName = currentUser.displayName || currentUser.email;
-      displayName = isAnonToggled ? 'Anonymous' : (currentUser.displayName || currentUser.email || 'Anonymous');
+      contactEmail = currentUser.email || (document.getElementById('contact-email').value || '').trim();
+      contactName = currentUser.displayName || (document.getElementById('contact-name').value || '').trim() || contactEmail;
+      displayName = isAnonToggled ? 'Anonymous' : (contactName || 'Anonymous');
     } else {
       contactName = (document.getElementById('contact-name').value || '').trim() || null;
       contactEmail = (document.getElementById('contact-email').value || '').trim();
@@ -2547,13 +2549,39 @@ if (auth) {
       if (userName) userName.textContent = user.displayName || user.email || 'User';
 
       // Update form panels — show logged-in state
+      const hasName = !!user.displayName;
+      const hasEmail = !!user.email;
       const displayStr = user.displayName || user.email || 'User';
       if (incidentLoggedIn) incidentLoggedIn.classList.remove('hidden');
       if (incidentLoggedInName) incidentLoggedInName.textContent = 'Signed in as ' + displayStr;
-      if (incidentContactFields) incidentContactFields.classList.add('hidden');
       if (annoyanceLoggedIn) annoyanceLoggedIn.classList.remove('hidden');
       if (annoyanceLoggedInName) annoyanceLoggedInName.textContent = 'Signed in as ' + displayStr;
-      if (annoyanceContactFields) annoyanceContactFields.classList.add('hidden');
+
+      // If user has both name and email, hide contact fields entirely
+      // Otherwise show the missing field(s) so they can fill them in
+      if (hasName && hasEmail) {
+        if (incidentContactFields) incidentContactFields.classList.add('hidden');
+        if (annoyanceContactFields) annoyanceContactFields.classList.add('hidden');
+      } else {
+        // Show contact fields but pre-fill what we have
+        const incName = document.getElementById('contact-name');
+        const incEmail = document.getElementById('contact-email');
+        const annName = document.getElementById('annoyance-contact-name');
+        const annEmail = document.getElementById('annoyance-contact-email');
+        if (hasName) {
+          if (incName) { incName.value = user.displayName; incName.classList.add('hidden'); }
+          if (annName) { annName.value = user.displayName; annName.classList.add('hidden'); }
+        }
+        if (hasEmail) {
+          if (incEmail) { incEmail.value = user.email; incEmail.classList.add('hidden'); }
+          if (annEmail) { annEmail.value = user.email; annEmail.classList.add('hidden'); }
+          // Hide email helper text too
+          const incHelper = document.getElementById('incident-email-helper');
+          const annHelper = document.getElementById('annoyance-email-helper');
+          if (incHelper) incHelper.classList.add('hidden');
+          if (annHelper) annHelper.classList.add('hidden');
+        }
+      }
     } else {
       // Show login button
       if (loginBtn) loginBtn.classList.remove('hidden');
