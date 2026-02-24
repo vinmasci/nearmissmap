@@ -881,7 +881,7 @@ function csvEscape(str) {
 // ============================================
 function exportReportsCSV() {
   if (filteredReports.length === 0) { showToast('No reports to export'); return; }
-  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury,Rider Bearing,Other Party,Ongoing,Road Type,Speed Limit,Bike Infrastructure\n';
+  const header = 'ID,Collection,Type(s),Location,Description,Reporter,Email,Date,Incident DateTime,Status,Flagged,Flag Count,Upvote Count,Lat,Lng,Scariness,Contact Made,Injury,Rider Bearing,Other Party,Ongoing,Road Type,Speed Limit,Bike Infrastructure,Lighting,Weather,Surface,Rider Age,Rider Gender,Ride Type,Bike Type,Reporting For\n';
   const rows = filteredReports.map(r => {
     const date = r.date ? r.date.toISOString().split('T')[0] : '';
     const lat = r.coords ? r.coords[1] : '';
@@ -896,6 +896,7 @@ function exportReportsCSV() {
       csvEscape(r.reporterName || ''),
       csvEscape(r.reporterEmail || ''),
       date,
+      raw.dateTime ? (raw.dateTime.toDate ? raw.dateTime.toDate().toISOString() : '') : '',
       r.status || '',
       r.flagged ? 'Yes' : 'No',
       r.reportCount || 0,
@@ -910,7 +911,15 @@ function exportReportsCSV() {
       r.isOngoing ? 'Yes' : '',
       csvEscape((r.infrastructure || raw.infrastructure || {}).roadTypeLabel || ''),
       (r.infrastructure || raw.infrastructure || {}).speedLimit || '',
-      csvEscape((r.infrastructure || raw.infrastructure || {}).bikeInfrastructure || '')
+      csvEscape((r.infrastructure || raw.infrastructure || {}).bikeInfrastructure || ''),
+      (raw.conditions || {}).lighting || '',
+      (raw.conditions || {}).weather || '',
+      (raw.conditions || {}).surface || '',
+      raw.riderAge || '',
+      raw.riderGender || '',
+      raw.rideType || '',
+      raw.bikeType || '',
+      raw.reportingFor || ''
     ].join(',');
   }).join('\n');
   const blob = new Blob([header + rows], { type: 'text/csv' });
@@ -953,7 +962,16 @@ function exportReportsGeoJSON() {
           isOngoing: r.isOngoing || false,
           roadType: (r.infrastructure || raw.infrastructure || {}).roadTypeLabel || '',
           speedLimit: (r.infrastructure || raw.infrastructure || {}).speedLimit || '',
-          bikeInfrastructure: (r.infrastructure || raw.infrastructure || {}).bikeInfrastructure || ''
+          bikeInfrastructure: (r.infrastructure || raw.infrastructure || {}).bikeInfrastructure || '',
+          dateTime: raw.dateTime ? (raw.dateTime.toDate ? raw.dateTime.toDate().toISOString() : '') : '',
+          lighting: (raw.conditions || {}).lighting || '',
+          weather: (raw.conditions || {}).weather || '',
+          surface: (raw.conditions || {}).surface || '',
+          riderAge: raw.riderAge || '',
+          riderGender: raw.riderGender || '',
+          rideType: raw.rideType || '',
+          bikeType: raw.bikeType || '',
+          reportingFor: raw.reportingFor || ''
         }
       };
     })
