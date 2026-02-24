@@ -1537,7 +1537,7 @@ function startPlacingMarker() {
   isPlacingMarker = true;
   map.getCanvas().style.cursor = 'crosshair';
   const msg = reportMode === 'annoyance' ? 'Click the map to place the annoyance location' : 'Click the map to place the incident location';
-  showToast(msg);
+  showToast(msg, true);
   reportButtonsDiv.style.display = 'none';
 }
 
@@ -1621,6 +1621,7 @@ map.on('click', (e) => {
 
   // 1st click: place marker, start direction tracking
   if (!isPlacingMarker) return;
+  hideToast();
 
   const coords = [e.lngLat.lng, e.lngLat.lat];
   reportCoords = coords;
