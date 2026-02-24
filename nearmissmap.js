@@ -1872,13 +1872,20 @@ function validateForm() {
     if (emailVal.length === 0) emailValid = false;
   }
 
-  const valid = reportCoords && selectedTypes.length > 0 && selectedScariness && desc.length >= 20 &&
-    selectedReporter &&
-    (riderAge && riderAge.value) &&
-    (rideType && rideType.value) &&
-    (bikeType && bikeType.value) &&
-    emailValid && nameValid;
-  document.getElementById('incident-submit').disabled = !valid;
+  const missing = [];
+  if (selectedTypes.length === 0) missing.push('incident type');
+  if (!selectedScariness) missing.push('scariness level');
+  if (!selectedReporter) missing.push('who are you reporting for');
+  if (desc.length < 20) missing.push('description (min 20 chars)');
+  if (!(riderAge && riderAge.value)) missing.push('age range');
+  if (!(rideType && rideType.value)) missing.push('ride type');
+  if (!(bikeType && bikeType.value)) missing.push('bike type');
+  if (!nameValid) missing.push('your name');
+  if (!emailValid) missing.push('valid email');
+
+  const btn = document.getElementById('incident-submit');
+  btn.disabled = missing.length > 0;
+  btn._missingFields = missing;
 }
 
 // Re-validate when name or email changes (incident)
@@ -2049,8 +2056,15 @@ function validateAnnoyanceForm() {
     if (emailVal.length === 0) emailValid = false;
   }
 
-  const valid = reportCoords && selectedAnnoyanceTypes.length > 0 && desc.length >= 20 && emailValid && nameValid;
-  document.getElementById('annoyance-submit').disabled = !valid;
+  const missing = [];
+  if (selectedAnnoyanceTypes.length === 0) missing.push('annoyance type');
+  if (desc.length < 20) missing.push('description (min 20 chars)');
+  if (!nameValid) missing.push('your name');
+  if (!emailValid) missing.push('valid email');
+
+  const btn = document.getElementById('annoyance-submit');
+  btn.disabled = missing.length > 0;
+  btn._missingFields = missing;
 }
 
 // Re-validate when name or email changes (annoyance)
@@ -2114,6 +2128,11 @@ function upsertMailingList(email, name, source) {
 // ============================================
 
 document.getElementById('annoyance-submit').addEventListener('click', async () => {
+  const annBtn = document.getElementById('annoyance-submit');
+  if (annBtn.disabled && annBtn._missingFields && annBtn._missingFields.length > 0) {
+    showToast('Missing: ' + annBtn._missingFields.join(', '));
+    return;
+  }
   if (!reportCoords) return;
 
   if (selectedAnnoyanceTypes.length === 0) {
@@ -2245,6 +2264,11 @@ document.getElementById('annoyance-submit').addEventListener('click', async () =
 // ============================================
 
 document.getElementById('incident-submit').addEventListener('click', async () => {
+  const incBtn = document.getElementById('incident-submit');
+  if (incBtn.disabled && incBtn._missingFields && incBtn._missingFields.length > 0) {
+    showToast('Missing: ' + incBtn._missingFields.join(', '));
+    return;
+  }
   if (!reportCoords) return;
 
   if (selectedTypes.length === 0) {
