@@ -504,32 +504,37 @@ function customizeMapStyle() {
       )) {
         map.setLayoutProperty(id, 'visibility', 'none');
       }
-      // Mute land/background
-      if (id === 'land' || id === 'background') {
-        map.setPaintProperty(id, 'background-color', '#F8F8F8');
-      }
-      // Mute green areas
-      if (id.includes('park') || id.includes('landuse') || id.includes('landcover') ||
-          id.includes('grass') || id.includes('forest') || id.includes('vegetation') ||
-          id.includes('green') || id.includes('nature') || id.includes('wood')) {
-        if (layer.type === 'fill') map.setPaintProperty(id, 'fill-color', '#D8E8D8');
-      }
-      // Mute water
-      if ((id === 'water' || id.includes('water')) && layer.type === 'fill') {
-        map.setPaintProperty(id, 'fill-color', '#D4E4EC');
-      }
-      // Reduce hillshade
-      if (id.includes('hillshade')) {
-        map.setPaintProperty(id, 'hillshade-exaggeration', 0.3);
-      }
-      // Mute road colors
-      if (layer.type === 'line') {
-        if (id.includes('motorway') || id.includes('trunk')) {
-          map.setPaintProperty(id, 'line-color', '#E0D8D0');
-        } else if (id.includes('primary')) {
-          map.setPaintProperty(id, 'line-color', '#EEEEEE');
-        } else if (id.includes('road') || id.includes('street') || id.includes('secondary') || id.includes('tertiary')) {
-          map.setPaintProperty(id, 'line-color', '#F0F0F0');
+
+      if (isSatellite) {
+        // Satellite mode — make road overlays subtle
+        if (layer.type === 'line' && (id.includes('road') || id.includes('street') || id.includes('motorway') ||
+            id.includes('trunk') || id.includes('primary') || id.includes('secondary') || id.includes('tertiary'))) {
+          map.setPaintProperty(id, 'line-opacity', 0.3);
+        }
+      } else {
+        // Streets mode — muted light colors
+        if (id === 'land' || id === 'background') {
+          map.setPaintProperty(id, 'background-color', '#F8F8F8');
+        }
+        if (id.includes('park') || id.includes('landuse') || id.includes('landcover') ||
+            id.includes('grass') || id.includes('forest') || id.includes('vegetation') ||
+            id.includes('green') || id.includes('nature') || id.includes('wood')) {
+          if (layer.type === 'fill') map.setPaintProperty(id, 'fill-color', '#D8E8D8');
+        }
+        if ((id === 'water' || id.includes('water')) && layer.type === 'fill') {
+          map.setPaintProperty(id, 'fill-color', '#D4E4EC');
+        }
+        if (id.includes('hillshade')) {
+          map.setPaintProperty(id, 'hillshade-exaggeration', 0.3);
+        }
+        if (layer.type === 'line') {
+          if (id.includes('motorway') || id.includes('trunk')) {
+            map.setPaintProperty(id, 'line-color', '#E0D8D0');
+          } else if (id.includes('primary')) {
+            map.setPaintProperty(id, 'line-color', '#EEEEEE');
+          } else if (id.includes('road') || id.includes('street') || id.includes('secondary') || id.includes('tertiary')) {
+            map.setPaintProperty(id, 'line-color', '#F0F0F0');
+          }
         }
       }
     } catch (e) {
