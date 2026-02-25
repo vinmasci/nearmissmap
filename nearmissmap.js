@@ -2597,10 +2597,18 @@ if (auth) {
       if (annoyanceLoggedInName) annoyanceLoggedInName.textContent = 'Signed in as ' + displayStr;
 
       // If user has both name and email, hide contact fields entirely
-      // Otherwise show the missing field(s) so they can fill them in
+      // Pre-fill the inputs so validation passes even though they're hidden
       if (hasName && hasEmail) {
         if (incidentContactFields) incidentContactFields.classList.add('hidden');
         if (annoyanceContactFields) annoyanceContactFields.classList.add('hidden');
+        const incName = document.getElementById('contact-name');
+        const incEmail = document.getElementById('contact-email');
+        const annName = document.getElementById('annoyance-contact-name');
+        const annEmail = document.getElementById('annoyance-contact-email');
+        if (incName) { incName.value = user.displayName; incName.classList.add('hidden'); }
+        if (incEmail) { incEmail.value = user.email; incEmail.classList.add('hidden'); }
+        if (annName) { annName.value = user.displayName; annName.classList.add('hidden'); }
+        if (annEmail) { annEmail.value = user.email; annEmail.classList.add('hidden'); }
       } else {
         // Show contact fields but pre-fill what we have
         const incName = document.getElementById('contact-name');
