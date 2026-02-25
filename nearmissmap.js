@@ -1032,7 +1032,7 @@ function addMapLayers() {
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-gray-400"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(reporterName)}</span>
             <div class="flex items-center gap-1.5">
-              ${(() => { const voted = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return voted ? `<span class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md" title="${count} me too(s)"><i class="fa-solid fa-hand text-[10px]"></i>${count > 0 ? count : ''}</span>` : `<button onclick="meTooReport('${f.id || p.id}',this)" class="py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 bg-white border border-gray-200 rounded-md hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50 transition-colors" title="${count > 0 ? count + ' me too(s)' : 'Me too!'}"><i class="fa-solid fa-hand text-[10px]"></i>Me too</button>`; })()}
+              ${(() => { const voted = typeof localStorage !== 'undefined' && localStorage.getItem('nmm_liked_' + (f.id || p.id)); const count = parseInt(p.upvoteCount) || 0; return voted ? `<span class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md" title="${count} me too(s)"><i class="fa-solid fa-hand text-[10px]"></i></span>` : `<button onclick="meTooReport('${f.id || p.id}',this)" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-gray-400 bg-white border border-gray-200 rounded-md hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50 transition-colors" title="${count > 0 ? count + ' me too(s)' : 'Me too!'}"><i class="fa-solid fa-hand text-[10px]"></i></button>`; })()}
               <button onclick="openStreetView(${coords[1]},${coords[0]})" title="Street View" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-blue-500 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"><i class="fa-solid fa-street-view text-[10px]"></i></button>
               <button onclick="flagReport('annoyances','${f.id || p.id}')" title="Flag" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-gray-400 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"><i class="fa-solid fa-flag text-[10px]"></i></button>
               ${isAdmin ? `<button onclick="deleteAnnoyance('${f.id || p.id}')" title="Delete" class="py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-red-400 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}
@@ -2585,9 +2585,9 @@ window.meTooReport = async function(docId, btnEl) {
     if (btnEl) {
       const newCount = (parseInt(btnEl.title) || 0) + 1;
       const span = document.createElement('span');
-      span.className = 'py-1 px-2 inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md';
+      span.className = 'py-1 px-2 inline-flex items-center justify-center text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-md';
       span.title = newCount + ' me too(s)';
-      span.innerHTML = `<i class="fa-solid fa-hand text-[10px]"></i>${newCount}`;
+      span.innerHTML = '<i class="fa-solid fa-hand text-[10px]"></i>';
       btnEl.replaceWith(span);
     }
     showToast('Thanks — me too!');
