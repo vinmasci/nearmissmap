@@ -546,6 +546,9 @@ function customizeMapStyle() {
 map.on('style.load', () => {
   customizeMapStyle();
   addMapLayers();
+  // Re-populate data after style change
+  updateReportsSource();
+  applyFilters();
 });
 
 
