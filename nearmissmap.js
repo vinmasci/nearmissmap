@@ -738,40 +738,21 @@ function addMapLayers() {
     data: { type: 'FeatureCollection', features: [] },
     cluster: true,
     clusterMaxZoom: 14,
-    clusterRadius: 50
-  });
-
-  // Cluster circles
-  map.addLayer({
-    id: 'report-clusters',
-    type: 'circle',
-    source: 'reports',
-    filter: ['has', 'point_count'],
-    paint: {
-      'circle-color': [
-        'step', ['get', 'point_count'],
-        '#f59e0b', 10,
-        '#f97316', 25,
-        '#ef4444'
-      ],
-      'circle-radius': [
-        'step', ['get', 'point_count'],
-        18, 10,
-        24, 25,
-        30
-      ],
-      'circle-stroke-width': 2,
-      'circle-stroke-color': '#fff'
+    clusterRadius: 50,
+    clusterProperties: {
+      incidentCount: ['+', ['case', ['==', ['get', '_reportType'], 'incident'], 1, 0]]
     }
   });
 
-  // Cluster count labels
+  // Cluster pie charts (symbol layer with dynamic images)
   map.addLayer({
-    id: 'report-cluster-count',
+    id: 'report-clusters',
     type: 'symbol',
     source: 'reports',
     filter: ['has', 'point_count'],
     layout: {
+      'icon-image': ['concat', 'pie-', ['get', 'point_count'], '-', ['get', 'incidentCount']],
+      'icon-allow-overlap': true,
       'text-field': '{point_count_abbreviated}',
       'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
       'text-size': 13
@@ -779,6 +760,61 @@ function addMapLayers() {
     paint: {
       'text-color': '#fff'
     }
+  });
+
+  // Generate pie chart images on demand
+  map.on('styleimagemissing', (e) => {
+    const id = e.id;
+    if (!id.startsWith('pie-')) return;
+    const parts = id.split('-');
+    const total = parseInt(parts[1]);
+    const incidents = parseInt(parts[2]);
+    const annoyances = total - incidents;
+
+    const dpr = window.devicePixelRatio || 1;
+    const radius = (total < 10 ? 18 : total < 25 ? 24 : 30);
+    const size = (radius * 2 + 4) * dpr;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = radius * dpr;
+
+    // Draw pie slices
+    const incidentAngle = (incidents / total) * Math.PI * 2;
+    let startAngle = -Math.PI / 2; // Start from top
+
+    // Incident slice (red)
+    if (incidents > 0) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, startAngle, startAngle + incidentAngle);
+      ctx.closePath();
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+      startAngle += incidentAngle;
+    }
+
+    // Annoyance slice (amber)
+    if (annoyances > 0) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, startAngle, startAngle + (Math.PI * 2 - incidentAngle));
+      ctx.closePath();
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+    }
+
+    // White border
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2 * dpr;
+    ctx.stroke();
+
+    map.addImage(id, { width: size, height: size, data: ctx.getImageData(0, 0, size, size).data }, { pixelRatio: dpr });
   });
 
   // Generate marker images (wait for Font Awesome to load)
