@@ -1361,6 +1361,12 @@ function updateIncidentCount() {
     text = parts.join(', ') || '0 reports';
   }
   document.getElementById('incident-count').textContent = text;
+
+  // Update navbar stats
+  const statInc = document.getElementById('stat-incidents');
+  const statAnn = document.getElementById('stat-annoyances');
+  if (statInc) statInc.textContent = incidentCount;
+  if (statAnn) statAnn.textContent = annoyanceCount;
 }
 
 // Filter event listeners
