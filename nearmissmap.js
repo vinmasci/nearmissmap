@@ -62,9 +62,9 @@ let selectedOngoing = null;
 // ============================================
 
 const SCARINESS_COLORS = {
-  not_scary: '#22c55e',
-  a_bit_scary: '#f59e0b',
-  fairly_scary: '#f97316',
+  not_scary: '#ef4444',
+  a_bit_scary: '#ef4444',
+  fairly_scary: '#ef4444',
   very_scary: '#ef4444'
 };
 
