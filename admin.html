@@ -579,7 +579,7 @@ function renderTable(reports) {
       : '';
 
     const upvoteBadge = r.upvoteCount > 0
-      ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="${r.upvoteCount} love(s)"><i class="fa-solid fa-heart mr-0.5"></i>${r.upvoteCount}</span>`
+      ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${r.collection === 'annoyances' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'}" title="${r.upvoteCount} ${r.collection === 'annoyances' ? 'me too(s)' : 'upvote(s)'}"><i class="fa-solid ${r.collection === 'annoyances' ? 'fa-hand' : 'fa-arrow-up'} mr-0.5"></i>${r.upvoteCount}</span>`
       : '';
 
     const statusBadge = getStatusBadge(r.status);
