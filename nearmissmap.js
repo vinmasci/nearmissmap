@@ -576,6 +576,22 @@ document.getElementById('locate-btn').addEventListener('click', () => {
   geolocate.trigger();
 });
 
+// Satellite toggle
+let isSatellite = false;
+document.getElementById('satellite-btn').addEventListener('click', () => {
+  isSatellite = !isSatellite;
+  const btn = document.getElementById('satellite-btn');
+  if (isSatellite) {
+    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
+    btn.classList.add('bg-blue-600', 'text-white');
+    btn.classList.remove('bg-slate-900', 'text-slate-300');
+  } else {
+    map.setStyle('mapbox://styles/mapbox/streets-v12');
+    btn.classList.remove('bg-blue-600', 'text-white');
+    btn.classList.add('bg-slate-900', 'text-slate-300');
+  }
+});
+
 // Reset view button (mobile) — snap back to Melbourne
 document.getElementById('reset-view-btn')?.addEventListener('click', () => {
   map.flyTo({ center: [144.96, -37.81], zoom: 11, duration: 1000 });
