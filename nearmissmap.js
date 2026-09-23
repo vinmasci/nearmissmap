@@ -163,7 +163,8 @@ const ANNOYANCE_TYPE_LABELS = {
   poor_signage: 'Poor Signage', traffic_lights: 'Traffic Lights',
   pinch_point: 'Pinch Point', poor_lighting: 'Poor Lighting',
   path_ends: 'Path Ends', dog_off_leash: 'Dog Off Leash',
-  bad_intersection: 'Bad Intersection', flooding: 'Flooding', other: 'Other'
+  bad_intersection: 'Bad Intersection', flooding: 'Flooding',
+  swooping_bird: 'Swooping Bird', works_closure: 'Works / Closure', tree_branches: 'Fallen Tree / Branches', other: 'Other'
 };
 
 const ANNOYANCE_TYPE_DESCRIPTIONS = {
@@ -181,10 +182,16 @@ const ANNOYANCE_TYPE_DESCRIPTIONS = {
   dog_off_leash: 'Unleashed dogs on shared paths creating hazards for cyclists.',
   bad_intersection: 'Intersection design is unsafe or confusing for cyclists — poor sight lines, no bike box, etc.',
   flooding: 'Path or road regularly floods or has poor drainage, making it impassable after rain.',
+  swooping_bird: 'A magpie or other bird swooping at riders. Include when it happened and the affected stretch.',
+  works_closure: 'Roadworks, maintenance or a closed road or path affecting your ride.',
+  tree_branches: 'A fallen tree or branches obstructing the road or path.',
   other: 'Anything else that makes cycling annoying — describe it below.'
 };
 
 const ANNOYANCE_TYPE_ICONS = {
+  swooping_bird: '<i class="fa-solid fa-crow" style="font-size:14px"></i>',
+  works_closure: '<i class="fa-solid fa-road-barrier" style="font-size:14px"></i>',
+  tree_branches: '<i class="fa-solid fa-tree" style="font-size:14px"></i>',
   blocked_lane: '<i class="fa-solid fa-road-barrier" style="font-size:14px"></i>',
   poor_surface: '<i class="fa-solid fa-road-circle-exclamation" style="font-size:14px"></i>',
   glass_debris: '<i class="fa-solid fa-burst" style="font-size:14px"></i>',
@@ -203,6 +210,7 @@ const ANNOYANCE_TYPE_ICONS = {
 };
 
 const ANNOYANCE_FA_UNICODE = {
+  swooping_bird: '\uf520', works_closure: '\ue562', tree_branches: '\uf1bb',
   blocked_lane: '\ue562', poor_surface: '\ue565', glass_debris: '\ue4dc',
   overgrown: '\uf06c', faded_markings: '\uf850', no_infrastructure: '\uf05e',
   poor_signage: '\uf277', traffic_lights: '\uf637', pinch_point: '\uf362',
@@ -420,7 +428,7 @@ function generateMarkerImages() {
     const p = 3 * ratio;
     ctx.beginPath();
     ctx.roundRect(p, p, pxSize - p * 2, pxSize - p * 2, r);
-    ctx.fillStyle = ANNOYANCE_MARKER_COLOR;
+    ctx.fillStyle = type === 'swooping_bird' ? '#9333ea' : ANNOYANCE_MARKER_COLOR;
     ctx.fill();
     // White FA icon
     const iconSize = Math.round(11 * ratio);
@@ -1367,7 +1375,11 @@ function applyFilters() {
   }
   if (!showIncidents) filteredIncidents = [];
 
-  const filteredAnnoyances = showAnnoyances ? annoyancesData.features : [];
+  const filteredAnnoyances = showAnnoyances ? annoyancesData.features.filter(f => {
+    if (reportType !== 'annoyance' || !type) return true;
+    const types = JSON.parse(f.properties.annoyanceTypes || '[]');
+    return types.includes(type) || f.properties.annoyanceType === type;
+  }) : [];
 
   if (map.getSource('reports')) {
     map.getSource('reports').setData({
@@ -1404,12 +1416,21 @@ function updateIncidentCount() {
   if (statAnn) statAnn.textContent = annoyanceCount;
 }
 
+// Category choices follow the selected report family.
+function updateTypeFilter() {
+  const annoyances = document.getElementById('filter-report-type').value === 'annoyance';
+  const select = document.getElementById('filter-type');
+  select.replaceChildren(new Option('All Types', ''));
+  for (const [value, label] of Object.entries(annoyances ? ANNOYANCE_TYPE_LABELS : TYPE_LABELS)) select.add(new Option(label, value));
+  document.getElementById('filter-scariness').disabled = annoyances;
+}
 // Filter event listeners
-document.getElementById('filter-report-type').addEventListener('change', applyFilters);
+document.getElementById('filter-report-type').addEventListener('change', () => { updateTypeFilter(); applyFilters(); });
 document.getElementById('filter-type').addEventListener('change', applyFilters);
 document.getElementById('filter-scariness').addEventListener('change', applyFilters);
 document.getElementById('filter-reset').addEventListener('click', () => {
   document.getElementById('filter-report-type').value = '';
+  updateTypeFilter();
   document.getElementById('filter-type').value = '';
   document.getElementById('filter-scariness').value = '';
   applyFilters();
