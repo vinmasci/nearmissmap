@@ -378,7 +378,7 @@ function displayInfrastructure(infra, cardEl, spinnerEl) {
 function generateMarkerImages() {
   const ratio = window.devicePixelRatio || 1;
   const size = 24;
-  const pxSize = size * ratio;
+  const pxSize = Math.round(size * ratio);
   const canvas = document.createElement('canvas');
   canvas.width = pxSize;
   canvas.height = pxSize;
@@ -449,7 +449,7 @@ function generateMarkerImages() {
 function generateDirectionArrowImages() {
   const ratio = window.devicePixelRatio || 1;
   const w = 16, h = 40;
-  const pxW = w * ratio, pxH = h * ratio;
+  const pxW = Math.round(w * ratio), pxH = Math.round(h * ratio);
   const canvas = document.createElement('canvas');
   canvas.width = pxW;
   canvas.height = pxH;
