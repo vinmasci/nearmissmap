@@ -784,7 +784,7 @@ function addMapLayers() {
 
     const dpr = window.devicePixelRatio || 1;
     const radius = (total < 10 ? 18 : total < 25 ? 24 : 30);
-    const size = (radius * 2 + 4) * dpr;
+    const size = Math.round((radius * 2 + 4) * dpr);
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
