@@ -1137,16 +1137,14 @@ function updateReportsSource() {
 function loadIncidents() {
   if (!db) return;
 
-  const query = db.collection('incidents')
-    .where('status', '==', 'approved')
-    .orderBy('reportedAt', 'desc')
-    .limit(2000);
+  const query = db.collection('community_reports_public').where('kind', '==', 'incident').limit(2000);
 
   // Real-time listener
   query.onSnapshot(snapshot => {
     const features = [];
     snapshot.forEach(doc => {
       const d = doc.data();
+      if (d.expiresAt && d.expiresAt.toMillis() <= Date.now()) return;
       if (!d.geometry || !d.geometry.coordinates) return;
       features.push({
         type: 'Feature',
@@ -1192,15 +1190,13 @@ function loadIncidents() {
 function loadAnnoyances() {
   if (!db) return;
 
-  const query = db.collection('annoyances')
-    .where('status', '==', 'approved')
-    .orderBy('reportedAt', 'desc')
-    .limit(2000);
+  const query = db.collection('community_reports_public').where('kind', '==', 'annoyance').limit(2000);
 
   query.onSnapshot(snapshot => {
     const features = [];
     snapshot.forEach(doc => {
       const d = doc.data();
+      if (d.expiresAt && d.expiresAt.toMillis() <= Date.now()) return;
       if (!d.geometry || !d.geometry.coordinates) return;
       features.push({
         type: 'Feature',
@@ -2547,7 +2543,7 @@ window.deleteIncident = async function(incidentId) {
   if (!currentUser || !isAdmin) return;
   if (!confirm('Delete this incident?')) return;
   try {
-    await db.collection('incidents').doc(incidentId).delete();
+    await mutateShared(incidentId, 'delete');
     showToast('Incident deleted');
   } catch (err) {
     console.error('Delete error:', err);
@@ -2559,7 +2555,7 @@ window.deleteAnnoyance = async function(annoyanceId) {
   if (!currentUser || !isAdmin) return;
   if (!confirm('Delete this annoyance report?')) return;
   try {
-    await db.collection('annoyances').doc(annoyanceId).delete();
+    await mutateShared(annoyanceId, 'delete');
     showToast('Annoyance deleted');
   } catch (err) {
     console.error('Delete error:', err);
@@ -2569,11 +2565,7 @@ window.deleteAnnoyance = async function(annoyanceId) {
 
 window.flagReport = async function(collection, docId) {
   try {
-    const ref = db.collection(collection).doc(docId);
-    await ref.update({
-      flagged: true,
-      reportCount: firebase.firestore.FieldValue.increment(1)
-    });
+    await mutateShared(docId, 'flag');
     showToast('Flagged for review. Thank you!');
   } catch (err) {
     console.error('Flag error:', err);
@@ -2588,10 +2580,7 @@ window.upvoteReport = async function(collection, docId, btnEl) {
     return;
   }
   try {
-    const ref = db.collection(collection).doc(docId);
-    await ref.update({
-      upvoteCount: firebase.firestore.FieldValue.increment(1)
-    });
+    await mutateShared(docId, 'upvote');
     localStorage.setItem(key, '1');
     if (btnEl) {
       const countMatch = btnEl.textContent.match(/(\d+)/);
@@ -2616,10 +2605,7 @@ window.meTooReport = async function(docId, btnEl) {
     return;
   }
   try {
-    const ref = db.collection('annoyances').doc(docId);
-    await ref.update({
-      upvoteCount: firebase.firestore.FieldValue.increment(1)
-    });
+    await mutateShared(docId, 'upvote');
     localStorage.setItem(key, '1');
     if (btnEl) {
       const newCount = (parseInt(btnEl.title) || 0) + 1;
@@ -3055,4 +3041,10 @@ function capitalize(str) {
 
 function formatParty(party) {
   return (party || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// The public document ID identifies the original record; no copied reports or dual writes.
+async function mutateShared(id, action, updates) {
+  if (!currentUser) throw new Error('Sign in to update this report');
+  return firebase.app().functions('australia-southeast1').httpsCallable('mutateSharedReport')({id, action, ...(updates ? {updates} : {})});
 }
